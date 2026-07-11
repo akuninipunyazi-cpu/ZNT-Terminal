@@ -1,0 +1,15 @@
+{
+  "name": "znt-terminal",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @znt/web run dev",
+    "build:web": "npm --workspace @znt/web run build",
+    "lint:web": "npm --workspace @znt/web run lint",
+    "dev:api": "uvicorn app.main:app --reload --app-dir apps/api --host 0.0.0.0 --port 8000",
+    "test:python": "pytest"
+  }
+}

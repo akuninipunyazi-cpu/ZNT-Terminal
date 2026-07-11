@@ -1,0 +1,17 @@
+exchanges:
+  binance:
+    enabled: true
+    ws_base: wss://stream.binance.com:9443
+    quote_assets:
+      - USDT
+    initial_symbols:
+      - BTCUSDT
+      - ETHUSDT
+      - SOLUSDT
+      - BNBUSDT
+
+  bybit:
+    enabled: false
+    ws_base: wss://stream.bybit.com/v5/public/linear
+    quote_assets:
+      - USDT

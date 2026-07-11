@@ -1,0 +1,60 @@
+timeframes:
+  15m:
+    min_quote_volume: 500000
+    min_liquidity_score: 0.62
+    max_spread_bps: 12
+    volume_window: 48
+    volume_zscore: 2.5
+    breakout_window: 20
+    max_sample_entropy: 0.75
+    max_ranked: 20
+
+  30m:
+    min_quote_volume: 750000
+    min_liquidity_score: 0.64
+    max_spread_bps: 11
+    volume_window: 48
+    volume_zscore: 2.35
+    breakout_window: 20
+    max_sample_entropy: 0.78
+    max_ranked: 20
+
+  1h:
+    min_quote_volume: 1000000
+    min_liquidity_score: 0.66
+    max_spread_bps: 10
+    volume_window: 72
+    volume_zscore: 2.0
+    breakout_window: 24
+    max_sample_entropy: 0.82
+    max_ranked: 20
+
+  4h:
+    min_quote_volume: 2000000
+    min_liquidity_score: 0.68
+    max_spread_bps: 9
+    volume_window: 90
+    volume_zscore: 1.8
+    breakout_window: 30
+    max_sample_entropy: 0.86
+    max_ranked: 20
+
+  1d:
+    min_quote_volume: 3500000
+    min_liquidity_score: 0.70
+    max_spread_bps: 8
+    volume_window: 60
+    volume_zscore: 1.65
+    breakout_window: 20
+    max_sample_entropy: 0.92
+    max_ranked: 20
+
+  1w:
+    min_quote_volume: 5000000
+    min_liquidity_score: 0.72
+    max_spread_bps: 7
+    volume_window: 52
+    volume_zscore: 1.5
+    breakout_window: 12
+    max_sample_entropy: 1.0
+    max_ranked: 20
