@@ -1,8 +1,20 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import auth, payments, terminal, websocket
 from app.core.config import get_settings
+from app.core.database import engine
+from app.models import Base
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Inisialisasi tabel database saat startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 
 def create_app() -> FastAPI:
@@ -12,6 +24,7 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version="0.1.0",
         description="REST and WebSocket gateway for ZNT Terminal.",
+        lifespan=lifespan,
     )
 
     app.add_middleware(
