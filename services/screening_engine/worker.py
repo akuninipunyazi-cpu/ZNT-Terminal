@@ -76,13 +76,28 @@ class ScreeningEngineWorker:
         
         # Simulate some variance for entropy and breakout detection
         import random
-        base_series = [price * (1 + random.uniform(-0.02, 0.02)) for _ in range(50)]
-        base_series.append(price)
+        
+        # 40% chance of generating a breakout (long/gainer or short/loser)
+        breakout_type = random.choice(["none", "none", "none", "up", "down"])
+        
+        if breakout_type == "up":
+            # Historical prices are lower, making current price look like an upward breakout
+            base_series = [price * 0.95 * (1 + random.uniform(-0.01, 0.01)) for _ in range(50)]
+            latest_price = price
+        elif breakout_type == "down":
+            # Historical prices are higher, making current price look like a downward breakout
+            base_series = [price * 1.05 * (1 + random.uniform(-0.01, 0.01)) for _ in range(50)]
+            latest_price = price
+        else:
+            base_series = [price * (1 + random.uniform(-0.02, 0.02)) for _ in range(50)]
+            latest_price = price
+            
+        base_series.append(latest_price)
         
         return MarketSnapshot(
             symbol=symbol,
             timeframe=self.timeframe,
-            price=price,
+            price=latest_price,
             quote_volume=volume,
             liquidity_score=0.8,  # Mock
             spread_bps=2.5,       # Mock
