@@ -38,9 +38,32 @@ services:
       - .env
     command: npm run dev:web
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - api
+
+  ingestor:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    env_file:
+      - .env
+    command: python -m services.market_ingestor
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  engine:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    env_file:
+      - .env
+    command: python -m services.screening_engine
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - ingestor
 
 volumes:
   postgres-data:
