@@ -6,7 +6,7 @@ from redis.asyncio import Redis
 from services.screening_engine.config import load_timeframe_config
 from services.screening_engine.pipeline.runner import run_pipeline
 from znt_common.market import MarketSnapshot, RankingResult, ScreeningCandidate
-from znt_common.redis_keys import engine_rankings_stream, ranking_cache_key
+from znt_common.redis_keys import engine_rankings_stream, ranking_cache_key, ticker_cache_key
 
 
 class ScreeningEngineWorker:
