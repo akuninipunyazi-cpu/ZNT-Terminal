@@ -46,10 +46,28 @@ class PaymentService:
             await self.db.execute(delete(Payment).where(Payment.setup_token == "dev-token"))
             payment.setup_token = "dev-token"
             await self.db.commit()
-            payment_url = (
-                f"http://localhost:3000/setup-account"
-                f"?order_id={order_id}&email={payload.email}&setup_token=dev-token"
-            )
+            
+            # Resolve VPS IP and port dynamically if configured in CORS_ORIGINS
+            base_url = "localhost"
+            port = "3000"
+            for origin in self.settings.cors_origins:
+                if "localhost" not in origin and "127.0.0.1" not in origin:
+                    parts = origin.replace("http://", "").replace("https://", "").split(":")
+                    base_url = parts[0]
+                    if len(parts) > 1:
+                        port = parts[1]
+                    break
+            
+            if base_url != "localhost":
+                payment_url = (
+                    f"http://{base_url}:{port}/setup-account"
+                    f"?order_id={order_id}&email={payload.email}&setup_token=dev-token"
+                )
+            else:
+                payment_url = (
+                    f"http://localhost:3000/setup-account"
+                    f"?order_id={order_id}&email={payload.email}&setup_token=dev-token"
+                )
         else:
             token = uuid4().hex
             payment.setup_token = token
