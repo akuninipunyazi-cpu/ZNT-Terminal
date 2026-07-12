@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { UserPlus } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 
@@ -13,6 +13,19 @@ export default function SetupAccountPage() {
     password: "",
     setup_token: ""
   });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email") || "";
+      const tokenParam = params.get("setup_token") || "";
+      setForm((current) => ({
+        ...current,
+        email: emailParam,
+        setup_token: tokenParam
+      }));
+    }
+  }, []);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
