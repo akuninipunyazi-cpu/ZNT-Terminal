@@ -18,6 +18,7 @@ class ScreeningEngineWorker:
     async def run_once(self, snapshots: list[MarketSnapshot]) -> RankingResult:
         result = run_pipeline(snapshots, self.timeframe, self.config)
         await self.publish(result)
+        print(f"[Engine] Calculated rankings for {len(snapshots)} symbols. Gainers: {len(result.gainers)} | Losers: {len(result.losers)}", flush=True)
         return result
 
     async def publish(self, result: RankingResult) -> None:
