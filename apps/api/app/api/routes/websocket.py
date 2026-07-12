@@ -61,6 +61,7 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
                                     "timeframe": timeframe,
                                     "data": json.loads(payload)
                                 })
+                                print(f"[WS] Sent terminal update for {timeframe}", flush=True)
                 else:
                     # Heartbeat if no data
                     await websocket.send_json({
@@ -68,6 +69,7 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
                         "timeframe": timeframe,
                         "status": "waiting_for_signals",
                     })
+                    print(f"[WS] Sent heartbeat for {timeframe}", flush=True)
             except RedisError:
                 await asyncio.sleep(2)
 
