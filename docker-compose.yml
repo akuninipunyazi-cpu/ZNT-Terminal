@@ -23,6 +23,10 @@ services:
       dockerfile: infra/docker/Dockerfile.api
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://znt:znt@postgres:5432/znt_terminal
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app/packages/python_common
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir apps/api
     ports:
       - "8000:8000"
@@ -48,6 +52,9 @@ services:
       dockerfile: infra/docker/Dockerfile.api
     env_file:
       - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app/packages/python_common
     command: python -m services.market_ingestor
     restart: unless-stopped
     depends_on:
@@ -59,6 +66,9 @@ services:
       dockerfile: infra/docker/Dockerfile.api
     env_file:
       - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app/packages/python_common
     command: python -m services.screening_engine
     restart: unless-stopped
     depends_on:
