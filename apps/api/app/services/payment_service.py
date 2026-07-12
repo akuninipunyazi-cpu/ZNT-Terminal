@@ -42,6 +42,8 @@ class PaymentService:
                     break
 
         if self.settings.app_env == "local":
+            from sqlalchemy import delete
+            await self.db.execute(delete(Payment).where(Payment.setup_token == "dev-token"))
             payment.setup_token = "dev-token"
             await self.db.commit()
             payment_url = (
