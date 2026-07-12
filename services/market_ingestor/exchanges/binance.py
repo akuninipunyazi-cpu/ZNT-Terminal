@@ -14,8 +14,10 @@ class BinanceTickerStream:
 
     async def messages(self) -> AsyncIterator[dict]:
         # Gunakan format /stream?streams= karena lebih stabil di banyak jaringan
+        # Hapus suffix '/ws' jika ada untuk combined stream Binance
+        base_url = self.ws_base.replace("/ws", "")
         stream_names = "/".join(f"{s}@ticker" for s in self.symbols)
-        url = f"{self.ws_base}/stream?streams={stream_names}"
+        url = f"{base_url}/stream?streams={stream_names}"
 
         print(f"Connecting to: {url}")
 
