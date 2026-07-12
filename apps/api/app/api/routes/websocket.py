@@ -54,7 +54,7 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
                     for _, messages in events:
                         for msg_id, data in messages:
                             last_id = msg_id
-                            payload = data.get(b"payload")
+                            payload = data.get("payload") or data.get(b"payload")
                             if payload:
                                 await websocket.send_json({
                                     "type": "terminal_update",
