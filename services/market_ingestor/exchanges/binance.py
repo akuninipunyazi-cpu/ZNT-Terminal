@@ -13,15 +13,12 @@ class BinanceTickerStream:
         self.ws_base = ws_base.rstrip("/")
 
     async def messages(self) -> AsyncIterator[dict]:
-        # Gunakan format /stream?streams= karena lebih stabil di banyak jaringan
-        # Hapus suffix '/ws' jika ada untuk combined stream Binance
+        # Gunakan format /stream?streams= karena terbukti stabil di VPS Anda
         base_url = self.ws_base.replace("/ws", "")
         
-        if "!ticker@arr" in self.symbols:
-            url = f"{base_url}/ws/!ticker@arr"
-        else:
-            stream_names = "/".join(f"{s}@ticker" for s in self.symbols)
-            url = f"{base_url}/stream?streams={stream_names}"
+        # Jika simbol adalah wildcard, jangan tambahkan '@ticker'
+        stream_names = "/".join(f"{s}@ticker" if "@" not in s else s for s in self.symbols)
+        url = f"{base_url}/stream?streams={stream_names}"
 
         print(f"Connecting to: {url}")
 
@@ -38,12 +35,16 @@ class BinanceTickerStream:
             async for raw_message in socket:
                 payload = json.loads(raw_message)
                 
-                # Jika data berupa list (seperti !ticker@arr), pecah dan yield satu per satu
-                if isinstance(payload, list):
+                # Format combined stream membungkus data di dalam key "data"
+                if "data" in payload:
+                    data = payload["data"]
+                    if isinstance(data, list):
+                        for ticker in data:
+                            yield ticker
+                    else:
+                        yield data
+                elif isinstance(payload, list):
                     for ticker in payload:
                         yield ticker
-                # Data di format /stream selalu ada di dalam key "data"
-                elif "data" in payload:
-                    yield payload["data"]
                 else:
                     yield payload
