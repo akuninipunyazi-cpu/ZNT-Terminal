@@ -14,7 +14,7 @@ class MarketIngestorWorker:
         self.stream = BinanceTickerStream(symbols=symbols, ws_base=ws_base)
 
     async def run(self) -> None:
-        logger.info(f"Starting ingestor for {len(self.stream.symbols)} symbols on {self.stream.exchange}")
+        logger.info(f"Starting ingestor for symbols on {self.stream.exchange}")
         
         while True:
             try:
@@ -22,15 +22,22 @@ class MarketIngestorWorker:
                     normalized = normalize_binance_ticker(payload)
                     symbol = normalized["symbol"]
 
+                    # Hanya simpan pasangan USDT (menghindari pasangan aneh seperti BTCETH)
+                    if not symbol.endswith("USDT"):
+                        continue
+
                     # Push to stream for historical processing
                     await self.redis.xadd(market_raw_stream("binance"), normalized, maxlen=1000)
                     
                     # Update cache for instant UI access
                     await self.redis.hset(ticker_cache_key(symbol), mapping=normalized)
+
+                    # Simpan daftar koin aktif secara dinamis di Redis Set
+                    await self.redis.sadd("znt:active_symbols", symbol)
                     
-                    # Optional: print for debugging (only top pair to avoid terminal spam)
-                    if symbol == self.stream.symbols[0].upper():
-                        print(f"[{symbol}] Price: {normalized['price']} | Vol: {normalized['quote_volume']}")
+                    # Optional: print for debugging (only BTCUSDT to avoid terminal spam)
+                    if symbol == "BTCUSDT":
+                        print(f"[{symbol}] Price: {normalized['price']} | Vol: {normalized['quote_volume']}", flush=True)
 
             except Exception as e:
                 logger.error(f"Stream error: {e}. Reconnecting in 5s...")

@@ -46,12 +46,18 @@ class ScreeningEngineWorker:
     async def run_forever(self) -> None:
         """Process market data continuously and publish rankings."""
         while True:
-            # In a production environment, we would read from market_candle_stream
-            # and maintain a rolling window of history for each symbol.
-            # For this implementation, we simulate snapshots from the ticker cache
-            # to demonstrate the pipeline flow.
+            # Get active symbols dynamically from Redis
+            # decode_responses=False is used in engine, so we decode the bytes members to strings
+            try:
+                raw_symbols = await self.redis.smembers("znt:active_symbols")
+                symbols = [s.decode("utf-8") for s in raw_symbols] if raw_symbols else []
+            except Exception:
+                symbols = []
+
+            # Fallback to initial symbols if set is empty
+            if not symbols:
+                symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "WLDUSDT", "INJUSDT", "SEIUSDT", "MEMEUSDT"]
             
-            symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "WLDUSDT", "INJUSDT", "MEMEUSDT", "BNBUSDT", "SEIUSDT"]
             snapshots = []
 
             for symbol in symbols:

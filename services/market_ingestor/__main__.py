@@ -13,10 +13,7 @@ async def main() -> None:
     redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
     redis = Redis.from_url(redis_url, decode_responses=True)
 
-    symbols = [
-        "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT",
-        "WLDUSDT", "INJUSDT", "SEIUSDT", "MEMEUSDT",
-    ]
+    symbols = ["!ticker@arr"]
     ws_base = os.environ.get("BINANCE_WS_BASE", "wss://stream.binance.com:9443/ws")
 
     worker = MarketIngestorWorker(redis, ws_base, symbols)
