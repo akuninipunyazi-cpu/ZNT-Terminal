@@ -30,8 +30,8 @@ async def main() -> None:
     worker = NewsIngestorWorker(redis=redis, feeds=feeds_config)
 
     try:
-        # Poll news feeds every 60 seconds
-        await worker.run_forever(interval_seconds=60)
+        # Poll news feeds every 3 minutes (180 seconds)
+        await worker.run_forever(interval_seconds=180)
     except asyncio.CancelledError:
         logger.info("News ingestor cancelled.")
     finally:

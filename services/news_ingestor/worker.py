@@ -24,7 +24,7 @@ class NewsIngestorWorker:
     def __init__(self, redis: Redis, feeds: dict[str, dict]):
         self.redis = redis
         self.feeds = feeds
-        self.client = httpx.AsyncClient(timeout=10.0, headers=HEADERS)
+        self.client = httpx.AsyncClient(timeout=10.0, headers=HEADERS, follow_redirects=True)
 
     def _parse_rss(self, xml_content: str, source_name: str) -> list[dict]:
         """Parses RSS XML content and extracts news items."""
