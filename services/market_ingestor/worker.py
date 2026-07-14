@@ -39,6 +39,8 @@ class MarketIngestorWorker:
     async def run(self) -> None:
         logger.info(f"Starting ingestor for {self.exchange_name} (wildcard: {self.symbols})")
         
+        processed_count = 0
+
         while True:
             try:
                 if not self.normalizer:
@@ -47,26 +49,36 @@ class MarketIngestorWorker:
                     continue
 
                 async for payload in self.stream.messages():
-                    normalized = self.normalizer(payload)
-                    symbol = normalized["symbol"]
+                    try:
+                        normalized = self.normalizer(payload)
+                        symbol = normalized["symbol"]
 
-                    # Filter based on configured quote assets
-                    is_valid_quote = any(symbol.endswith(quote) for quote in self.quote_assets)
-                    if not is_valid_quote:
-                        continue
+                        # Filter based on configured quote assets
+                        is_valid_quote = any(symbol.endswith(quote) for quote in self.quote_assets)
+                        if not is_valid_quote:
+                            continue
 
-                    # Push to stream for historical processing
-                    await self.redis.xadd(market_raw_stream(self.exchange_name), normalized, maxlen=1000)
-                    
-                    # Update cache for instant UI access
-                    await self.redis.hset(ticker_cache_key(symbol), mapping=normalized)
+                        # Push to stream for historical processing
+                        await self.redis.xadd(market_raw_stream(self.exchange_name), normalized, maxlen=1000)
+                        
+                        # Update cache for instant UI access
+                        await self.redis.hset(ticker_cache_key(symbol), mapping=normalized)
 
-                    # Save active symbol dynamically in Redis Set
-                    await self.redis.sadd("znt:active_symbols", symbol)
-                    
-                    # Optional: print for debugging (only BTCUSDT to avoid terminal spam)
-                    if symbol == "BTCUSDT":
-                        print(f"[{symbol}] Price: {normalized['price']} | Vol: {normalized['quote_volume']}", flush=True)
+                        # Save active symbol dynamically in Redis Set
+                        await self.redis.sadd("znt:active_symbols", symbol)
+
+                        processed_count += 1
+
+                        # Log progress every 500 tickers to avoid spam
+                        if processed_count % 500 == 0:
+                            logger.info(f"[{self.exchange_name}] Processed {processed_count} tickers total.")
+
+                        # Optional: print for debugging (only BTCUSDT to avoid terminal spam)
+                        if symbol == "BTCUSDT":
+                            print(f"[{symbol}] Price: {normalized['price']} | Vol: {normalized['quote_volume']}", flush=True)
+
+                    except Exception as inner_e:
+                        logger.error(f"[{self.exchange_name}] Error processing payload: {inner_e} | Payload sample: {str(payload)[:200]}")
 
             except Exception as e:
                 logger.error(f"Stream error on {self.exchange_name}: {e}. Reconnecting in 5s...")
