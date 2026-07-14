@@ -14,31 +14,46 @@ class MarketIngestorWorker:
         self.exchange_name = exchange_name.lower()
         self.ws_base = config["ws_base"]
         self.quote_assets = config.get("quote_assets", ["USDT"])
+        self.use_wildcard = use_wildcard
+        self.initial_symbols = config.get("initial_symbols", [])
+        self.stream = None  # Initialized in run() after symbol discovery
 
-        # Determine symbols to subscribe to
-        if use_wildcard:
-            if self.exchange_name == "binance":
-                self.symbols = ["!ticker@arr"]
-            else:
-                self.symbols = config.get("initial_symbols", [])
-        else:
-            self.symbols = config.get("initial_symbols", [])
-
-        # Initialize stream and normalizer based on exchange name
+        # Set normalizer based on exchange
         if self.exchange_name == "binance":
-            from services.market_ingestor.exchanges.binance import BinanceTickerStream
-            self.stream = BinanceTickerStream(symbols=self.symbols, ws_base=self.ws_base)
             self.normalizer = normalize_binance_ticker
         elif self.exchange_name == "bybit":
-            from services.market_ingestor.exchanges.bybit import BybitTickerStream
-            self.stream = BybitTickerStream(symbols=self.symbols, ws_base=self.ws_base)
-            self.normalizer = None  # To be implemented in Phase 2
+            self.normalizer = None  # Phase 2
         else:
             raise ValueError(f"Unsupported exchange: {self.exchange_name}")
 
+    async def _init_stream(self) -> None:
+        """Initialize the WebSocket stream, fetching symbols from REST API if needed."""
+        if self.exchange_name == "binance":
+            from services.market_ingestor.exchanges.binance import BinanceTickerStream
+
+            if self.use_wildcard:
+                # Fetch all active USDT symbols from Binance REST API
+                from services.market_ingestor.symbol_discovery import fetch_usdt_symbols
+                logger.info("[binance] Fetching symbol universe from REST API...")
+                symbols = await fetch_usdt_symbols()
+                if not symbols:
+                    logger.error("[binance] Symbol discovery returned empty list. Falling back to initial_symbols.")
+                    symbols = self.initial_symbols
+            else:
+                symbols = self.initial_symbols
+
+            self.stream = BinanceTickerStream(symbols=symbols, ws_base=self.ws_base)
+
+        elif self.exchange_name == "bybit":
+            from services.market_ingestor.exchanges.bybit import BybitTickerStream
+            self.stream = BybitTickerStream(symbols=self.initial_symbols, ws_base=self.ws_base)
+
     async def run(self) -> None:
-        logger.info(f"Starting ingestor for {self.exchange_name} (wildcard: {self.symbols})")
-        
+        logger.info(f"Starting ingestor for {self.exchange_name} (wildcard mode: {self.use_wildcard})")
+
+        # Initialize stream (may involve REST API call)
+        await self._init_stream()
+
         processed_count = 0
 
         while True:
