@@ -1,0 +1,10 @@
+feeds:
+  cointelegraph:
+    enabled: true
+    url: "https://cointelegraph.com/rss"
+  coindesk:
+    enabled: true
+    url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+  decrypt:
+    enabled: true
+    url: "https://decrypt.co/feed"

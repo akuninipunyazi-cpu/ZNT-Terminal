@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+import json
 
 from app.schemas.terminal import TimeframeStatus
+from app.core.redis import get_redis_client
 
 router = APIRouter()
 
@@ -14,3 +16,13 @@ async def timeframe_status(timeframe: str) -> TimeframeStatus:
         level_2_count=42,
         ranked_count=12,
     )
+
+
+@router.get("/news")
+async def get_latest_news(limit: int = Query(default=30, ge=1, le=100)) -> list[dict]:
+    redis = get_redis_client()
+    raw_news = await redis.lrange("znt:news:latest", 0, limit - 1)
+    if not raw_news:
+        return []
+    return [json.loads(n) for n in raw_news]
+

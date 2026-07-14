@@ -15,7 +15,7 @@ const items = [
 
 export function StatusRail({ connected, lastEvent, latencyMs }: StatusRailProps) {
   return (
-    <aside className="grid gap-2 border border-white/10 bg-black/70 p-3 lg:w-64">
+    <div className="grid gap-2 border border-white/10 bg-black/70 p-3">
       <div className="border border-terminal-yellow/20 bg-graphite-950 px-3 py-3">
         <p className="text-xs uppercase text-white/42">Realtime</p>
         <div className="mt-2 flex items-center justify-between gap-3">
@@ -45,6 +45,7 @@ export function StatusRail({ connected, lastEvent, latencyMs }: StatusRailProps)
           </div>
         );
       })}
-    </aside>
+    </div>
   );
 }
+

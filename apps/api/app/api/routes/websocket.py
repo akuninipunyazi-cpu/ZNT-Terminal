@@ -33,6 +33,7 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
     redis = get_redis_client()
     sessions = SessionService(redis)
     last_id = "$"
+    last_news_id = "$"
 
     try:
         while True:
@@ -46,22 +47,35 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
                 await websocket.close(code=1008)
                 return
 
-            # Read new rankings from the engine stream
+            # Read new rankings and news from the streams
             stream_key = f"engine.rankings.{timeframe}"
+            news_stream_key = "znt:news:stream"
             try:
-                events = await redis.xread({stream_key: last_id}, count=1, block=5000)
+                events = await redis.xread(
+                    {stream_key: last_id, news_stream_key: last_news_id},
+                    count=1,
+                    block=5000
+                )
                 if events:
-                    for _, messages in events:
+                    for stream, messages in events:
                         for msg_id, data in messages:
-                            last_id = msg_id
                             payload = data.get("payload") or data.get(b"payload")
                             if payload:
-                                await websocket.send_json({
-                                    "type": "terminal_update",
-                                    "timeframe": timeframe,
-                                    "data": json.loads(payload)
-                                })
-                                print(f"[WS] Sent terminal update for {timeframe}", flush=True)
+                                if stream == stream_key:
+                                    last_id = msg_id
+                                    await websocket.send_json({
+                                        "type": "terminal_update",
+                                        "timeframe": timeframe,
+                                        "data": json.loads(payload)
+                                    })
+                                    print(f"[WS] Sent terminal update for {timeframe}", flush=True)
+                                elif stream == news_stream_key:
+                                    last_news_id = msg_id
+                                    await websocket.send_json({
+                                        "type": "news_update",
+                                        "data": json.loads(payload)
+                                    })
+                                    print(f"[WS] Sent news update", flush=True)
                 else:
                     # Heartbeat if no data
                     await websocket.send_json({
@@ -75,3 +89,4 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
 
     except WebSocketDisconnect:
         return
+

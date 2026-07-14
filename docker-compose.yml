@@ -60,6 +60,21 @@ services:
     depends_on:
       - redis
 
+  news-ingestor:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app/packages/python_common
+    command: python -m services.news_ingestor
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+
   engine:
     build:
       context: .

@@ -5,6 +5,7 @@ import { Activity, Bell, Clock3, LogOut, RadioTower, Search, Zap } from "lucide-
 import { MarketChart } from "@/components/terminal/MarketChart";
 import { SignalTable, type SignalRow } from "@/components/terminal/SignalTable";
 import { StatusRail } from "@/components/terminal/StatusRail";
+import { NewsPanel } from "@/components/terminal/NewsPanel";
 import { useTerminalSocket } from "@/lib/realtime";
 
 const timeframes = ["15m", "30m", "1h", "4h", "1d", "1w"];
@@ -294,12 +295,16 @@ export function TerminalShell() {
           </div>
         </section>
 
-        <StatusRail
-          connected={realtime.connected}
-          lastEvent={realtime.lastEvent}
-          latencyMs={realtime.latencyMs}
-        />
+        <aside className="flex flex-col gap-3 lg:w-64 min-w-0">
+          <StatusRail
+            connected={realtime.connected}
+            lastEvent={realtime.lastEvent}
+            latencyMs={realtime.latencyMs}
+          />
+          <NewsPanel latestNews={realtime.latestNews} />
+        </aside>
       </div>
+
     </main>
   );
 }

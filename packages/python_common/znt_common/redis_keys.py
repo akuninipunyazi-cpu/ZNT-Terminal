@@ -20,3 +20,16 @@ def ranking_cache_key(timeframe: str, side: str) -> str:
 
 def ticker_cache_key(symbol: str) -> str:
     return f"cache:ticker:{symbol.upper()}"
+
+
+def news_stream_key() -> str:
+    return "znt:news:stream"
+
+
+def news_list_key() -> str:
+    return "znt:news:latest"
+
+
+def news_processed_set_key() -> str:
+    return "znt:news:processed_ids"
+

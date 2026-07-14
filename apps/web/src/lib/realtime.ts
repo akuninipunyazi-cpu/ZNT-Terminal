@@ -9,6 +9,7 @@ export type RealtimeState = {
   lastEvent: string;
   latencyMs: number | null;
   data: any | null;
+  latestNews: any | null;
 };
 
 export function useTerminalSocket(timeframe: string): RealtimeState {
@@ -16,7 +17,8 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
     connected: false,
     lastEvent: "offline",
     latencyMs: null,
-    data: null
+    data: null,
+    latestNews: null
   });
 
   const token = useMemo(() => {
@@ -36,11 +38,12 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
 
     socket.onopen = () => {
       if (!closed) {
-        setState({
+        setState((current) => ({
+          ...current,
           connected: true,
           lastEvent: "connected",
           latencyMs: Date.now() - startedAt
-        });
+        }));
       }
     };
 
@@ -57,11 +60,25 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
         return;
       }
 
-      setState((current) => ({
-        ...current,
-        lastEvent: message.type ?? "message",
-        data: message.type === "terminal_update" ? (message as any).data : current.data
-      }));
+      setState((current) => {
+        if (message.type === "terminal_update") {
+          return {
+            ...current,
+            lastEvent: "terminal_update",
+            data: (message as any).data
+          };
+        } else if (message.type === "news_update") {
+          return {
+            ...current,
+            lastEvent: "news_update",
+            latestNews: (message as any).data
+          };
+        }
+        return {
+          ...current,
+          lastEvent: message.type ?? "message"
+        };
+      });
     };
 
     socket.onclose = () => {
@@ -82,3 +99,4 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
 
   return state;
 }
+
