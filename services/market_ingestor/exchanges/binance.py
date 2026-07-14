@@ -30,12 +30,18 @@ class BinanceTickerStream:
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
 
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        }
+
         async with websockets.connect(
             url, 
             ping_interval=20, 
             ping_timeout=20, 
-            ssl=ssl_context
+            ssl=ssl_context,
+            additional_headers=headers
         ) as socket:
+            print(f"Successfully connected to Binance WebSocket: {url}", flush=True)
             async for raw_message in socket:
                 payload = json.loads(raw_message)
                 
