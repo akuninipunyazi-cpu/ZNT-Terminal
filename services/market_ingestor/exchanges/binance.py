@@ -16,9 +16,13 @@ class BinanceTickerStream:
         # Gunakan format /stream?streams= karena terbukti stabil di VPS Anda
         base_url = self.ws_base.replace("/ws", "")
         
-        # Jika simbol adalah wildcard, jangan tambahkan '@ticker'
-        stream_names = "/".join(f"{s}@ticker" if "@" not in s else s for s in self.symbols)
-        url = f"{base_url}/stream?streams={stream_names}"
+        # Jika hanya ada satu simbol dan itu adalah wildcard (misal diawali '!'), gunakan endpoint single stream /ws/
+        if len(self.symbols) == 1 and self.symbols[0].startswith("!"):
+            url = f"{base_url}/ws/{self.symbols[0]}"
+        else:
+            # Jika simbol adalah wildcard, jangan tambahkan '@ticker'
+            stream_names = "/".join(f"{s}@ticker" if "@" not in s else s for s in self.symbols)
+            url = f"{base_url}/stream?streams={stream_names}"
 
         print(f"Connecting to: {url}")
 

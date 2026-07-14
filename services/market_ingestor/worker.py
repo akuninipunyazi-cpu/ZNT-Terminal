@@ -76,8 +76,10 @@ class MarketIngestorWorker:
 if __name__ == "__main__":
     # Test script to run independently
     async def test():
+        import os
         from redis.asyncio import Redis
-        r = Redis(host='localhost', port=6379, decode_responses=True)
+        redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+        r = Redis.from_url(redis_url, decode_responses=True)
         # Mock configuration for Binance
         mock_config = {
             "ws_base": "wss://stream.binance.com:9443",
@@ -94,4 +96,5 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
     asyncio.run(test())
+
 
