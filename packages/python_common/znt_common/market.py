@@ -2,6 +2,23 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
+class CandleBar:
+    """A single closed OHLCV candle from Binance Kline WebSocket or REST."""
+    symbol: str
+    timeframe: str
+    open_time: int       # Unix ms
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float        # Base asset volume
+    quote_volume: float  # Quote asset volume (e.g., USDT)
+    close_time: int      # Unix ms
+    is_closed: bool      # True = final bar, False = still building
+
+
+
+@dataclass(frozen=True)
 class MarketSnapshot:
     symbol: str
     timeframe: str

@@ -1,10 +1,59 @@
 feeds:
+  # ── Tier 1: Established Crypto Media ──────────────────────────────────────
   cointelegraph:
     enabled: true
     url: "https://cointelegraph.com/rss"
+
   coindesk:
     enabled: true
     url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+
   decrypt:
     enabled: true
     url: "https://decrypt.co/feed"
+
+  the_block:
+    enabled: true
+    url: "https://www.theblock.co/rss.xml"
+
+  blockworks:
+    enabled: true
+    url: "https://blockworks.co/feed"
+
+  bitcoin_magazine:
+    enabled: true
+    url: "https://bitcoinmagazine.com/.rss/full/"
+
+  # ── Tier 2: Additional Crypto News ────────────────────────────────────────
+  cryptoslate:
+    enabled: true
+    url: "https://cryptoslate.com/feed/"
+
+  beincrypto:
+    enabled: true
+    url: "https://beincrypto.com/feed/"
+
+  bitcoinist:
+    enabled: true
+    url: "https://bitcoinist.com/feed/"
+
+  newsbtc:
+    enabled: true
+    url: "https://www.newsbtc.com/feed/"
+
+  u_today:
+    enabled: true
+    url: "https://u.today/rss"
+
+  ambcrypto:
+    enabled: true
+    url: "https://ambcrypto.com/feed/"
+
+  # ── Tier 3: Macro & Financial (may have rate limits) ──────────────────────
+  financial_juice:
+    enabled: true
+    url: "https://www.financialjuice.com/rss.ashx"
+
+  investing_crypto:
+    enabled: true
+    url: "https://www.investing.com/rss/news_301.rss"
