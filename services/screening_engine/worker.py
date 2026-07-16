@@ -30,6 +30,7 @@ TRIGGER_DRAIN_BLOCK_MS = 250
 
 RANKING_CACHE_TTL_SECONDS = {
     "15m": 60 * 60,
+    "30m": 90 * 60,
     "1h": 2 * 60 * 60,
     "4h": 6 * 60 * 60,
     "1d": 2 * 24 * 60 * 60,

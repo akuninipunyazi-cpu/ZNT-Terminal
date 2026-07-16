@@ -56,7 +56,7 @@ async def main() -> None:
         ticker_tasks.append(ticker_worker.run())
 
         # 4. Candle worker (Stream B: Candle/Kline -> Engine)
-        kline_timeframes = config.get("kline_timeframes", ["15m", "1h", "4h"])
+        kline_timeframes = config.get("kline_timeframes", ["15m", "30m", "1h", "4h", "1d", "1w"])
         ws_base = config.get("ws_base", "wss://stream.binance.com:9443")
 
         candle_tasks.append(

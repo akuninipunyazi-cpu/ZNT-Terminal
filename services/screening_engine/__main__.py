@@ -14,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # All timeframes the engine screens — must match kline_timeframes in exchanges.yaml
-ACTIVE_TIMEFRAMES = ["15m", "1h", "4h", "1d", "1w"]
+ACTIVE_TIMEFRAMES = ["15m", "30m", "1h", "4h", "1d", "1w"]
 
 
 async def main() -> None:
@@ -38,5 +38,5 @@ async def main() -> None:
     await asyncio.gather(*[w.run_forever() for w in workers])
 
 
-asyncio.run(main())
-
+if __name__ == "__main__":
+    asyncio.run(main())

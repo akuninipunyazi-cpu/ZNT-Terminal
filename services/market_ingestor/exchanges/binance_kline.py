@@ -14,6 +14,7 @@ KLINE_BATCH_SIZE = 200
 # Timeframe → Binance interval string mapping
 TIMEFRAME_MAP: dict[str, str] = {
     "15m": "15m",
+    "30m": "30m",
     "1h": "1h",
     "4h": "4h",
     "1d": "1d",
