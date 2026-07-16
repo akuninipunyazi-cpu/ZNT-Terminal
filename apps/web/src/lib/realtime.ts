@@ -18,6 +18,7 @@ export type RealtimeState = {
   latencyMs: number | null;
   data: any | null;
   latestNews: any | null;
+  tapeData: Record<string, { price: number; change: number }> | null;
 };
 
 export function useTerminalSocket(timeframe: string): RealtimeState {
@@ -26,8 +27,10 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
     lastEvent: "offline",
     latencyMs: null,
     data: null,
-    latestNews: null
+    latestNews: null,
+    tapeData: null
   });
+
 
   const token = useMemo(() => {
     if (typeof window === "undefined") {
@@ -126,6 +129,12 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
             ...current,
             lastEvent: "news_update",
             latestNews: (message as any).data
+          };
+        } else if (message.type === "tape_update") {
+          return {
+            ...current,
+            lastEvent: "tape_update",
+            tapeData: (message as any).data
           };
         }
         return {

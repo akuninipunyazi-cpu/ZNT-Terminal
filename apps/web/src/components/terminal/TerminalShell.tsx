@@ -4,22 +4,11 @@ import { useMemo, useState } from "react";
 import { Activity, Bell, Clock3, LogOut, RadioTower, Search, Zap } from "lucide-react";
 import { MarketChart } from "@/components/terminal/MarketChart";
 import { SignalTable, type SignalRow } from "@/components/terminal/SignalTable";
-import { StatusRail } from "@/components/terminal/StatusRail";
 import { NewsPanel } from "@/components/terminal/NewsPanel";
 import { useTerminalSocket } from "@/lib/realtime";
 
 const timeframes = ["15m", "30m", "1h", "4h", "1d", "1w"];
-
-const tape = [
-  ["BTC", "+1.82%", "68,420.50", "up"],
-  ["ETH", "+0.74%", "3,812.20", "up"],
-  ["SOL", "+3.11%", "174.22", "up"],
-  ["WLD", "-2.46%", "4.18", "down"],
-  ["INJ", "+4.92%", "28.74", "up"],
-  ["MEME", "-5.18%", "0.0182", "down"],
-  ["BNB", "+0.38%", "612.10", "up"],
-  ["SEI", "+2.21%", "0.61", "up"]
-];
+const tapeSymbols = ["BTC", "ETH", "SOL", "WLD", "INJ", "MEME", "BNB", "SEI"];
 
 const flowRows = [
   ["Aggressive buy", "62%", "text-terminal-green"],
@@ -39,6 +28,42 @@ const levelRows = [
 export function TerminalShell() {
   const [timeframe, setTimeframe] = useState("15m");
   const realtime = useTerminalSocket(timeframe);
+
+
+  const tape = useMemo(() => {
+    const defaultTape = [
+      ["BTC", "+1.82%", "68,420.50", "up"],
+      ["ETH", "+0.74%", "3,812.20", "up"],
+      ["SOL", "+3.11%", "174.22", "up"],
+      ["WLD", "-2.46%", "4.18", "down"],
+      ["INJ", "+4.92%", "28.74", "up"],
+      ["MEME", "-5.18%", "0.0182", "down"],
+      ["BNB", "+0.38%", "612.10", "up"],
+      ["SEI", "+2.21%", "0.61", "up"]
+    ];
+
+    if (!realtime.tapeData) {
+      return defaultTape;
+    }
+
+    return tapeSymbols.map((sym) => {
+      const data = realtime.tapeData?.[sym];
+      if (!data) {
+        const fb = defaultTape.find((item) => item[0] === sym);
+        return fb || [sym, "0.00%", "0.00", "up"];
+      }
+
+      const formattedPrice = data.price.toLocaleString(undefined, {
+        minimumFractionDigits: sym === "MEME" ? 4 : 2,
+        maximumFractionDigits: sym === "MEME" ? 4 : 2
+      });
+      const changePrefix = data.change >= 0 ? "+" : "";
+      const formattedChange = `${changePrefix}${data.change.toFixed(2)}%`;
+      const direction = data.change >= 0 ? "up" : "down";
+
+      return [sym, formattedChange, formattedPrice, direction];
+    });
+  }, [realtime.tapeData]);
 
   const longRows: SignalRow[] = useMemo(() => {
     if (!realtime.data?.gainers) return [];
@@ -121,6 +146,19 @@ export function TerminalShell() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Live Connection Status */}
+            <div className="hidden sm:flex items-center gap-2 px-3 h-9 border border-white/10 bg-graphite-900 text-xs font-mono select-none">
+              <span className={`h-1.5 w-1.5 rounded-full ${realtime.connected ? 'bg-terminal-green animate-pulse' : 'bg-terminal-red'}`} />
+              <span className={realtime.connected ? 'text-terminal-green' : 'text-terminal-red'}>
+                {realtime.connected ? 'WS CONNECTED' : 'OFFLINE'}
+              </span>
+              {realtime.connected && realtime.latencyMs !== null && (
+                <span className="text-white/36 border-l border-white/10 pl-2 ml-1">
+                  {realtime.latencyMs}ms
+                </span>
+              )}
+            </div>
+
             <button
               aria-label="Search"
               className="flex h-9 w-9 items-center justify-center border border-white/10 bg-graphite-900 text-white/70 hover:border-terminal-yellow/50"
@@ -170,37 +208,7 @@ export function TerminalShell() {
 
       <div className="grid gap-3 p-3 lg:grid-cols-[1fr_16rem] lg:p-4">
         <section className="grid min-w-0 gap-3">
-          <div className="grid gap-3 md:grid-cols-4">
-            {[
-              ["Universe", "1,000", "tracked pairs", "+18"],
-              ["Liquidity Pass", "284", "clean markets", "+7"],
-              ["Anomaly Burst", "42", "volume spikes", "+11"],
-              ["Ranked Signals", "12", "watchlist outputs", "-3"]
-            ].map(([label, value, hint, delta]) => (
-              <div
-                key={label}
-                className="relative overflow-hidden border border-white/10 bg-black/70 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-              >
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-terminal-yellow/70 to-transparent" />
-                <p className="text-xs uppercase text-white/42">{label}</p>
-                <div className="mt-2 flex items-end justify-between gap-3">
-                  <strong className="text-2xl text-white">{value}</strong>
-                  <div className="text-right">
-                    <span
-                      className={
-                        String(delta).startsWith("-")
-                          ? "block text-xs text-terminal-red"
-                          : "block text-xs text-terminal-green"
-                      }
-                    >
-                      {delta}
-                    </span>
-                    <span className="text-xs text-white/42">{hint}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+
 
           <div className="grid gap-3 xl:grid-cols-[1fr_0.82fr]">
             <MarketChart />
@@ -296,11 +304,6 @@ export function TerminalShell() {
         </section>
 
         <aside className="flex flex-col gap-3 lg:w-64 min-w-0">
-          <StatusRail
-            connected={realtime.connected}
-            lastEvent={realtime.lastEvent}
-            latencyMs={realtime.latencyMs}
-          />
           <NewsPanel latestNews={realtime.latestNews} />
         </aside>
       </div>

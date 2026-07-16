@@ -51,10 +51,11 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
             stream_key = f"engine.rankings.{timeframe}"
             news_stream_key = "znt:news:stream"
             try:
+                # Shorten block to 2 seconds to allow regular tape updates
                 events = await redis.xread(
                     {stream_key: last_id, news_stream_key: last_news_id},
                     count=1,
-                    block=5000
+                    block=2000
                 )
                 if events:
                     for stream, messages in events:
@@ -76,7 +77,39 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
                                         "data": json.loads(payload)
                                     })
                                     print(f"[WS] Sent news update", flush=True)
-                else:
+                
+                # Fetch and send Live Tape updates (BTC, ETH, SOL, WLD, INJ, MEME, BNB, SEI)
+                import time
+                now = time.time()
+                # Run every 2 seconds
+                if not hasattr(websocket, "_last_tape_time") or now - websocket._last_tape_time >= 2.0:
+                    websocket._last_tape_time = now
+                    tape_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "WLDUSDT", "INJUSDT", "MEMEUSDT", "BNBUSDT", "SEIUSDT"]
+                    pipe = redis.pipeline()
+                    for s in tape_symbols:
+                        pipe.hgetall(ticker_cache_key(s))
+                    results = await pipe.execute()
+                    
+                    tape_payload = {}
+                    for s, ticker in zip(tape_symbols, results, strict=False):
+                        if ticker:
+                            price_val = ticker.get("price") or ticker.get(b"price")
+                            change_val = ticker.get("price_change_percent") or ticker.get(b"price_change_percent")
+                            if price_val:
+                                s_short = s.replace("USDT", "")
+                                price_str = price_val.decode() if isinstance(price_val, bytes) else str(price_val)
+                                change_str = change_val.decode() if isinstance(change_val, bytes) else str(change_val) if change_val else "0"
+                                tape_payload[s_short] = {
+                                    "price": float(price_str),
+                                    "change": float(change_str)
+                                }
+                    if tape_payload:
+                        await websocket.send_json({
+                            "type": "tape_update",
+                            "data": tape_payload
+                        })
+
+                if not events:
                     # Heartbeat if no data
                     await websocket.send_json({
                         "type": "terminal_heartbeat",

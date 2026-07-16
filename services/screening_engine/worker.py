@@ -232,6 +232,9 @@ class ScreeningEngineWorker:
             count=TRIGGER_BATCH_COUNT,
             block=TRIGGER_WAIT_BLOCK_MS,
         )
+        if not events:
+            return []
+
         triggers = self._consume_trigger_events(events)
 
         loop = asyncio.get_running_loop()

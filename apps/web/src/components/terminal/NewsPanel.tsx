@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Newspaper, ExternalLink } from "lucide-react";
+import { Newspaper, ExternalLink, Maximize2 } from "lucide-react";
+import Link from "next/link";
 
 type NewsItem = {
   id: string;
@@ -88,10 +89,19 @@ export function NewsPanel({ latestNews }: NewsPanelProps) {
           <Newspaper size={15} className="text-terminal-yellow" />
           Realtime Feed
         </h2>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-terminal-green animate-pulse" />
-          <span className="text-[10px] text-white/42 uppercase">Live RSS</span>
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-terminal-green animate-pulse" />
+            <span className="text-[10px] text-white/42 uppercase">Live RSS</span>
+          </span>
+          <Link
+            href="/news"
+            className="p-1 hover:bg-white/10 rounded text-white/50 hover:text-terminal-yellow transition-colors"
+            title="Full Screen News"
+          >
+            <Maximize2 size={13} />
+          </Link>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
