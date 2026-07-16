@@ -13,12 +13,14 @@ dependencies = [
   "bcrypt==4.0.1",
   "pydantic-settings>=2.7.0",
   "python-jose[cryptography]>=3.3.0",
+  "python-multipart>=0.0.9",
   "PyYAML>=6.0.2",
   "redis>=5.2.1",
   "SQLAlchemy[asyncio]>=2.0.36",
   "uvicorn[standard]>=0.34.0",
   "websockets>=14.1"
 ]
+
 
 [project.optional-dependencies]
 dev = [
