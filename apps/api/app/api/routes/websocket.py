@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from redis.exceptions import RedisError
@@ -8,8 +9,10 @@ from app.core.config import get_settings
 from app.core.redis import get_redis_client
 from app.core.security import decode_access_token
 from app.services.session_service import SessionService
+from znt_common.redis_keys import ticker_cache_key
 
 router = APIRouter()
+
 
 
 @router.websocket("/ws/terminal")
@@ -34,6 +37,7 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
     sessions = SessionService(redis)
     last_id = "$"
     last_news_id = "$"
+    last_tape_time = 0.0
 
     try:
         while True:
@@ -79,11 +83,10 @@ async def terminal_socket(websocket: WebSocket, timeframe: str = "15m", token: s
                                     print(f"[WS] Sent news update", flush=True)
                 
                 # Fetch and send Live Tape updates (BTC, ETH, SOL, WLD, INJ, MEME, BNB, SEI)
-                import time
                 now = time.time()
                 # Run every 2 seconds
-                if not hasattr(websocket, "_last_tape_time") or now - websocket._last_tape_time >= 2.0:
-                    websocket._last_tape_time = now
+                if now - last_tape_time >= 2.0:
+                    last_tape_time = now
                     tape_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "WLDUSDT", "INJUSDT", "MEMEUSDT", "BNBUSDT", "SEIUSDT"]
                     pipe = redis.pipeline()
                     for s in tape_symbols:
