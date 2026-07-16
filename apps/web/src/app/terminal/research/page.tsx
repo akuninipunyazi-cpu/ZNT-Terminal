@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, LineChart, FileText, Globe, ExternalLink, Calendar, HelpCircle, Activity } from "lucide-react";
+import { ArrowLeft, LineChart, FileText, Globe, ExternalLink, Calendar, Activity, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 
 type Tab = "ideas" | "updates" | "outlooks";
@@ -44,6 +44,19 @@ export default function ResearchPage() {
   const [outlooks, setOutlooks] = useState<EconomyOutlook[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Detect admin role from JWT
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const token = window.localStorage.getItem("znt_token");
+    if (!token) return;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setIsAdmin(payload.username === "admin");
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -92,6 +105,65 @@ export default function ResearchPage() {
     return `${apiBase}${url}`;
   };
 
+  // ── Delete handlers ──────────────────────────────────────────────────────
+
+  async function handleDelete(type: "trade-ideas" | "market-updates" | "economy-outlooks", id: string) {
+    if (!confirm("Yakin hapus item ini? Tindakan ini tidak bisa dibatalkan.")) return;
+    setDeleting(id);
+    try {
+      await apiRequest(`/insights/${type}/${id}`, { method: "DELETE" });
+      if (type === "trade-ideas") setIdeas((prev) => prev.filter((x) => x.id !== id));
+      if (type === "market-updates") setUpdates((prev) => prev.filter((x) => x.id !== id));
+      if (type === "economy-outlooks") setOutlooks((prev) => prev.filter((x) => x.id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  // ── Shared delete button component ───────────────────────────────────────
+
+  function DeleteBtn({ type, id }: { type: "trade-ideas" | "market-updates" | "economy-outlooks"; id: string }) {
+    if (!isAdmin) return null;
+    return (
+      <button
+        onClick={() => handleDelete(type, id)}
+        disabled={deleting === id}
+        title="Hapus (Admin)"
+        className="flex h-7 w-7 items-center justify-center border border-terminal-red/30 text-terminal-red/50 hover:border-terminal-red hover:text-terminal-red hover:bg-terminal-red/10 transition-all disabled:opacity-40 disabled:cursor-wait rounded-sm"
+      >
+        <Trash2 size={13} />
+      </button>
+    );
+  }
+
+  // ── Chart image block ─────────────────────────────────────────────────────
+
+  function ChartImage({ url, alt }: { url?: string; alt: string }) {
+    if (!url) return null;
+    const resolved = resolveChartUrl(url);
+    return (
+      <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden group/img">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={resolved}
+          alt={alt}
+          className="object-cover w-full h-full transition-transform duration-500 group-hover/img:scale-105"
+          onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+        />
+        <a
+          href={resolved}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm"
+          title="Open Full Image"
+        >
+          <ExternalLink size={14} />
+        </a>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(247,201,72,0.06),transparent_40rem),linear-gradient(180deg,#050607,#090b0d_42%,#050607)] text-white">
@@ -99,7 +171,7 @@ export default function ResearchPage() {
       <header className="sticky top-0 z-20 border-b border-terminal-yellow/20 bg-black/92 backdrop-blur">
         <div className="flex min-h-14 items-center justify-between gap-3 px-4 py-2 sm:px-6">
           <div className="flex items-center gap-4">
-            <Link 
+            <Link
               href="/terminal"
               className="flex h-9 w-9 items-center justify-center border border-white/10 bg-graphite-900 text-white/70 hover:border-terminal-yellow hover:text-terminal-yellow transition-all"
               title="Back to Terminal"
@@ -112,16 +184,24 @@ export default function ResearchPage() {
               </div>
               <div>
                 <h1 className="text-base font-semibold">ZNT Analyst Desk</h1>
-                <p className="text-xs text-white/42">Market Updates, Economy Outlook & Trade Ideas</p>
+                <p className="text-xs text-white/42">Market Updates, Economy Outlook &amp; Trade Ideas</p>
               </div>
             </div>
           </div>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 border border-terminal-yellow/30 bg-terminal-yellow/10 px-3 py-1.5 text-xs font-bold text-terminal-yellow hover:bg-terminal-yellow hover:text-black transition-all"
+            >
+              + Publish New
+            </Link>
+          )}
         </div>
       </header>
 
       {/* Main Container */}
       <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6">
-        
+
         {/* Navigation Tabs */}
         <div className="flex items-center border-b border-white/10 mb-6 overflow-x-auto select-none gap-2">
           {[
@@ -162,8 +242,8 @@ export default function ResearchPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            
-            {/* Render Tab A: Trade Ideas */}
+
+            {/* ── Tab A: Trade Ideas ───────────────────────────────────── */}
             {activeTab === "ideas" && (
               ideas.length === 0 ? (
                 <div className="flex h-48 items-center justify-center text-sm text-white/42 border border-dashed border-white/10 bg-black/40">
@@ -173,31 +253,8 @@ export default function ResearchPage() {
                 <div className="grid gap-6 md:grid-cols-2">
                   {ideas.map((idea) => (
                     <article key={idea.id} className="border border-white/10 bg-black/60 hover:bg-graphite-950/60 transition-all rounded overflow-hidden flex flex-col group">
-                      
-                      {/* Setup image preview */}
-                      {idea.chart_url && (
-                        <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={resolveChartUrl(idea.chart_url)}
-                            alt={`${idea.ticker} setup`}
-                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                            onError={(e) => {
-                              // If image fails, hide it or replace with fallback
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                          <a
-                            href={resolveChartUrl(idea.chart_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm"
-                            title="Open Full Image"
-                          >
-                            <ExternalLink size={14} />
-                          </a>
-                        </div>
-                      )}
+
+                      <ChartImage url={idea.chart_url} alt={`${idea.ticker} setup`} />
 
                       <div className="p-4 flex-1 flex flex-col justify-between">
                         <div>
@@ -213,9 +270,12 @@ export default function ResearchPage() {
                                 {idea.direction}
                               </span>
                             </div>
-                            <span className="text-[10px] uppercase font-semibold text-white/42 border border-white/10 bg-graphite-950 px-2 py-0.5 rounded-sm">
-                              {idea.trade_type}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] uppercase font-semibold text-white/42 border border-white/10 bg-graphite-950 px-2 py-0.5 rounded-sm">
+                                {idea.trade_type}
+                              </span>
+                              <DeleteBtn type="trade-ideas" id={idea.id} />
+                            </div>
                           </div>
 
                           {/* Key Levels Panel */}
@@ -234,13 +294,13 @@ export default function ResearchPage() {
                             </div>
                           </div>
 
-                          {/* Take Profit target chips */}
+                          {/* Take Profit chips */}
                           <div className="mb-4">
-                            <p className="text-[10px] uppercase text-white/42 font-semibold mb-1.5 tracking-wider">Target Targets</p>
+                            <p className="text-[10px] uppercase text-white/42 font-semibold mb-1.5 tracking-wider">Take Profit Targets</p>
                             <div className="flex flex-wrap gap-1.5">
                               {idea.tp_levels.map((level, i) => (
-                                <span 
-                                  key={i} 
+                                <span
+                                  key={i}
                                   className="px-2.5 py-1 text-xs bg-terminal-green/5 border border-terminal-green/20 text-terminal-green font-mono rounded-sm"
                                 >
                                   T{i + 1}: <strong className="text-white ml-0.5">{level}</strong>
@@ -261,14 +321,13 @@ export default function ResearchPage() {
                           <span>Published {formatDate(idea.created_at)}</span>
                         </div>
                       </div>
-
                     </article>
                   ))}
                 </div>
               )
             )}
 
-            {/* Render Tab B: Market Updates */}
+            {/* ── Tab B: Market Updates ────────────────────────────────── */}
             {activeTab === "updates" && (
               updates.length === 0 ? (
                 <div className="flex h-48 items-center justify-center text-sm text-white/42 border border-dashed border-white/10 bg-black/40">
@@ -278,26 +337,18 @@ export default function ResearchPage() {
                 <div className="space-y-4">
                   {updates.map((update) => (
                     <article key={update.id} className="border border-white/10 bg-black/60 rounded backdrop-blur overflow-hidden group">
-                      {update.chart_url && (
-                        <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={resolveChartUrl(update.chart_url)} alt={`${update.ticker} chart`}
-                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                          <a href={resolveChartUrl(update.chart_url)} target="_blank" rel="noopener noreferrer"
-                            className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm">
-                            <ExternalLink size={14} />
-                          </a>
-                        </div>
-                      )}
+                      <ChartImage url={update.chart_url} alt={`${update.ticker} chart`} />
                       <div className="p-4">
                         <div className="flex items-center justify-between gap-3 mb-3 border-b border-dashed border-white/10 pb-3 flex-wrap">
                           <span className="px-3 py-1 text-xs font-black bg-terminal-yellow/10 border border-terminal-yellow/30 text-terminal-yellow uppercase tracking-wider rounded-sm">
                             INDEX UPDATE: {update.ticker}
                           </span>
-                          <time className="text-xs text-white/36 font-mono flex items-center gap-1">
-                            <Calendar size={13} /> {formatDate(update.created_at)}
-                          </time>
+                          <div className="flex items-center gap-2">
+                            <time className="text-xs text-white/36 font-mono flex items-center gap-1">
+                              <Calendar size={13} /> {formatDate(update.created_at)}
+                            </time>
+                            <DeleteBtn type="market-updates" id={update.id} />
+                          </div>
                         </div>
                         <p className="text-sm text-white/88 leading-relaxed font-sans whitespace-pre-line">
                           {update.reason}
@@ -309,7 +360,7 @@ export default function ResearchPage() {
               )
             )}
 
-            {/* Render Tab C: Economy Outlooks */}
+            {/* ── Tab C: Economy Outlooks ──────────────────────────────── */}
             {activeTab === "outlooks" && (
               outlooks.length === 0 ? (
                 <div className="flex h-48 items-center justify-center text-sm text-white/42 border border-dashed border-white/10 bg-black/40">
@@ -319,26 +370,18 @@ export default function ResearchPage() {
                 <div className="space-y-4">
                   {outlooks.map((outlook) => (
                     <article key={outlook.id} className="border border-white/10 bg-black/60 rounded backdrop-blur overflow-hidden group">
-                      {outlook.chart_url && (
-                        <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={resolveChartUrl(outlook.chart_url)} alt={`${outlook.indicator} chart`}
-                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                          <a href={resolveChartUrl(outlook.chart_url)} target="_blank" rel="noopener noreferrer"
-                            className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm">
-                            <ExternalLink size={14} />
-                          </a>
-                        </div>
-                      )}
+                      <ChartImage url={outlook.chart_url} alt={`${outlook.indicator} chart`} />
                       <div className="p-4">
                         <div className="flex items-center justify-between gap-3 mb-3 border-b border-dashed border-white/10 pb-3 flex-wrap">
                           <span className="px-3 py-1 text-xs font-black bg-terminal-cyan/10 border border-terminal-cyan/30 text-terminal-cyan uppercase tracking-wider rounded-sm">
                             MACRO: {outlook.indicator}
                           </span>
-                          <time className="text-xs text-white/36 font-mono flex items-center gap-1">
-                            <Calendar size={13} /> {formatDate(outlook.created_at)}
-                          </time>
+                          <div className="flex items-center gap-2">
+                            <time className="text-xs text-white/36 font-mono flex items-center gap-1">
+                              <Calendar size={13} /> {formatDate(outlook.created_at)}
+                            </time>
+                            <DeleteBtn type="economy-outlooks" id={outlook.id} />
+                          </div>
                         </div>
                         <p className="text-sm text-white/88 leading-relaxed font-sans whitespace-pre-line">
                           {outlook.explanation}

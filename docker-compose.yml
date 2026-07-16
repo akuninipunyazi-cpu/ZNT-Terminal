@@ -30,6 +30,8 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir apps/api
     ports:
       - "8000:8000"
+    volumes:
+      - chart-uploads:/app/static
     depends_on:
       - postgres
       - redis
@@ -93,3 +95,4 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  chart-uploads:

@@ -176,3 +176,82 @@ async def list_trade_ideas(
 ) -> List[TradeIdea]:
     result = await db.execute(select(TradeIdea).order_by(TradeIdea.created_at.desc()))
     return list(result.scalars().all())
+
+
+# ── DELETE Endpoints (Admin Only) ───────────────────────────────────────────
+
+@router.delete("/market-updates/{id}", status_code=status.HTTP_200_OK)
+async def delete_market_update(
+    id: _uuid.UUID,
+    db: AsyncSession = Depends(get_db_session),
+    _admin: dict = Depends(get_admin_user),
+) -> dict:
+    result = await db.execute(select(MarketUpdate).where(MarketUpdate.id == id))
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Market update not found")
+    
+    # Optional: Delete associated chart image if it exists in local UPLOAD_DIR
+    if item.chart_url and item.chart_url.startswith("/static/charts/"):
+        filename = item.chart_url.split("/")[-1]
+        file_path = UPLOAD_DIR / filename
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except Exception:
+                pass  # Fail silently to avoid breaking delete flow if file not found
+
+    await db.delete(item)
+    await db.commit()
+    return {"message": "Market update deleted successfully"}
+
+
+@router.delete("/economy-outlooks/{id}", status_code=status.HTTP_200_OK)
+async def delete_economy_outlook(
+    id: _uuid.UUID,
+    db: AsyncSession = Depends(get_db_session),
+    _admin: dict = Depends(get_admin_user),
+) -> dict:
+    result = await db.execute(select(EconomyOutlook).where(EconomyOutlook.id == id))
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Economy outlook not found")
+    
+    if item.chart_url and item.chart_url.startswith("/static/charts/"):
+        filename = item.chart_url.split("/")[-1]
+        file_path = UPLOAD_DIR / filename
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except Exception:
+                pass
+
+    await db.delete(item)
+    await db.commit()
+    return {"message": "Economy outlook deleted successfully"}
+
+
+@router.delete("/trade-ideas/{id}", status_code=status.HTTP_200_OK)
+async def delete_trade_idea(
+    id: _uuid.UUID,
+    db: AsyncSession = Depends(get_db_session),
+    _admin: dict = Depends(get_admin_user),
+) -> dict:
+    result = await db.execute(select(TradeIdea).where(TradeIdea.id == id))
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trade idea not found")
+    
+    if item.chart_url and item.chart_url.startswith("/static/charts/"):
+        filename = item.chart_url.split("/")[-1]
+        file_path = UPLOAD_DIR / filename
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except Exception:
+                pass
+
+    await db.delete(item)
+    await db.commit()
+    return {"message": "Trade idea deleted successfully"}
+
