@@ -16,6 +16,12 @@ exchanges:
       - 4h
       - 1d
       - 1w
+    kline_backfill:
+      enabled: true
+      limit: 200
+      min_existing: 30
+      concurrency: 8
+      refresh_existing: false
 
 
   bybit:

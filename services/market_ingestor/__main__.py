@@ -1,11 +1,15 @@
 import asyncio
 import logging
 import os
+from collections.abc import Coroutine
+from typing import Any
 
 from redis.asyncio import Redis
 
+from services.market_ingestor.candle_backfill import CandleBackfillService
 from services.market_ingestor.candle_worker import CandleWorker
 from services.market_ingestor.config import load_exchange_config
+from services.market_ingestor.exchanges.binance_rest import BinanceKlineRestClient
 from services.market_ingestor.worker import MarketIngestorWorker
 
 logger = logging.getLogger(__name__)
@@ -33,9 +37,9 @@ async def main() -> None:
 
     use_wildcard = os.environ.get("USE_WILDCARD", "true").lower() == "true"
 
-    # 3. Spawn ticker workers (Stream A — Live UI / Chart / Tape)
-    ticker_tasks: list[asyncio.coroutine] = []
-    candle_tasks: list[asyncio.coroutine] = []
+    # 3. Spawn ticker workers (Stream A: Live UI / Chart / Tape)
+    ticker_tasks: list[Coroutine[Any, Any, None]] = []
+    candle_tasks: list[Coroutine[Any, Any, None]] = []
 
     for exchange_name, config in exchanges_config.items():
         if not config.get("enabled", False):
@@ -51,7 +55,7 @@ async def main() -> None:
         )
         ticker_tasks.append(ticker_worker.run())
 
-        # 4. Candle worker (Stream B — Candle/Kline → Engine)
+        # 4. Candle worker (Stream B: Candle/Kline -> Engine)
         kline_timeframes = config.get("kline_timeframes", ["15m", "1h", "4h"])
         ws_base = config.get("ws_base", "wss://stream.binance.com:9443")
 
@@ -63,6 +67,7 @@ async def main() -> None:
                 use_wildcard=use_wildcard,
                 initial_symbols=config.get("initial_symbols", []),
                 delay=CANDLE_WORKER_BOOT_DELAY_SECONDS,
+                backfill_config=config.get("kline_backfill", {}),
             )
         )
 
@@ -81,6 +86,7 @@ async def _launch_candle_worker_after_delay(
     use_wildcard: bool,
     initial_symbols: list[str],
     delay: int,
+    backfill_config: dict,
 ) -> None:
     """
     Wait for the ticker ingestor to populate znt:active_symbols, then
@@ -107,6 +113,26 @@ async def _launch_candle_worker_after_delay(
         f"across timeframes: {timeframes}"
     )
 
+    if backfill_config.get("enabled", True):
+        rest_client = BinanceKlineRestClient()
+        backfill = CandleBackfillService(
+            redis=redis,
+            rest_client=rest_client,
+            history_limit=int(backfill_config.get("limit", 200)),
+            min_existing=int(backfill_config.get("min_existing", 30)),
+            concurrency=int(backfill_config.get("concurrency", 8)),
+            refresh_existing=bool(backfill_config.get("refresh_existing", False)),
+        )
+        try:
+            logger.info(
+                "[CandleBackfill] Seeding %s symbols x %s timeframes before WS streaming...",
+                len(symbols),
+                len(timeframes),
+            )
+            await backfill.run(symbols=symbols, timeframes=timeframes)
+        finally:
+            await rest_client.close()
+
     worker = CandleWorker(
         redis=redis,
         symbols=symbols,
@@ -118,5 +144,3 @@ async def _launch_candle_worker_after_delay(
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-

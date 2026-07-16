@@ -3,6 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 
 const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_BASE_URL ?? "ws://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+type RankingSnapshot = {
+  timeframe: string;
+  gainers: any[];
+  losers: any[];
+  source: "cache" | "empty" | string;
+};
 
 export type RealtimeState = {
   connected: boolean;
@@ -28,6 +36,52 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
 
     return window.localStorage.getItem("znt_token");
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCachedRankings() {
+      setState((current) => ({
+        ...current,
+        data: null,
+        lastEvent: "loading_rankings"
+      }));
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/terminal/rankings/${timeframe}`);
+        if (!response.ok) {
+          throw new Error("ranking bootstrap failed");
+        }
+
+        const snapshot = (await response.json()) as RankingSnapshot;
+        if (!cancelled) {
+          setState((current) => ({
+            ...current,
+            data: {
+              timeframe: snapshot.timeframe,
+              gainers: snapshot.gainers,
+              losers: snapshot.losers
+            },
+            lastEvent: snapshot.source === "cache" ? "ranking_cache" : "ranking_empty"
+          }));
+        }
+      } catch {
+        if (!cancelled) {
+          setState((current) => ({
+            ...current,
+            data: null,
+            lastEvent: "ranking_cache_error"
+          }));
+        }
+      }
+    }
+
+    loadCachedRankings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [timeframe]);
 
   useEffect(() => {
     let closed = false;
@@ -99,4 +153,3 @@ export function useTerminalSocket(timeframe: string): RealtimeState {
 
   return state;
 }
-
