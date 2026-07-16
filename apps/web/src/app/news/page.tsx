@@ -144,41 +144,47 @@ export default function NewsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {news.map((item) => (
-              <article
-                key={item.id}
-                className={`p-4 border transition-all duration-500 bg-black/50 hover:bg-graphite-950/80 group rounded ${
-                  item.isNew
-                    ? "border-terminal-yellow bg-terminal-yellow/5 shadow-[0_0_20px_rgba(247,201,72,0.1)] animate-pulse"
-                    : "border-white/10 hover:border-terminal-yellow/30"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-                  <span className="px-2 py-0.5 text-[10px] font-semibold bg-terminal-yellow/10 border border-terminal-yellow/30 text-terminal-yellow uppercase tracking-wider rounded-sm">
-                    {item.source}
-                  </span>
-                  <time className="text-xs text-white/36 font-mono">
-                    {formatTime(item.published_at)}
-                  </time>
-                </div>
-                
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-base font-semibold text-white group-hover:text-terminal-yellow leading-snug cursor-pointer transition-colors"
+            {[...news]
+              .sort((a, b) => {
+                const ta = new Date(a.published_at).getTime();
+                const tb = new Date(b.published_at).getTime();
+                return (isNaN(ta) ? 0 : ta) - (isNaN(tb) ? 0 : tb);
+              })
+              .map((item) => (
+                <article
+                  key={item.id}
+                  className={`p-4 border transition-all duration-500 bg-black/55 hover:bg-graphite-950/80 group rounded ${
+                    item.isNew
+                      ? "border-terminal-yellow bg-terminal-yellow/5 shadow-[0_0_20px_rgba(247,201,72,0.1)] animate-pulse"
+                      : "border-white/10 hover:border-terminal-yellow/30"
+                  }`}
                 >
-                  {item.title}
-                  <ExternalLink size={14} className="inline-flex ml-1.5 opacity-0 group-hover:opacity-60 transition-opacity" />
-                </a>
+                  <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                    <span className="px-2 py-0.5 text-[10px] font-semibold bg-terminal-yellow/10 border border-terminal-yellow/30 text-terminal-yellow uppercase tracking-wider rounded-sm">
+                      {item.source}
+                    </span>
+                    <time className="text-xs text-white/36 font-mono">
+                      {formatTime(item.published_at)}
+                    </time>
+                  </div>
+                  
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-base font-semibold text-white group-hover:text-terminal-yellow leading-snug cursor-pointer transition-colors"
+                  >
+                    {item.title}
+                    <ExternalLink size={14} className="inline-flex ml-1.5 opacity-0 group-hover:opacity-60 transition-opacity" />
+                  </a>
 
-                {item.description && (
-                  <p className="mt-2.5 text-sm text-white/60 leading-relaxed font-sans">
-                    {item.description}
-                  </p>
-                )}
-              </article>
-            ))}
+                  {item.description && (
+                    <p className="mt-2.5 text-sm text-white/60 leading-relaxed font-sans">
+                      {item.description}
+                    </p>
+                  )}
+                </article>
+              ))}
           </div>
         )}
       </div>

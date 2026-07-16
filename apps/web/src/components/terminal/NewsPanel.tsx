@@ -114,39 +114,45 @@ export function NewsPanel({ latestNews }: NewsPanelProps) {
             No news signals available
           </div>
         ) : (
-          news.map((item) => (
-            <div
-              key={item.id}
-              className={`p-2.5 border transition-all duration-500 bg-graphite-950/80 hover:bg-graphite-900 group ${
-                item.isNew
-                  ? "border-terminal-yellow bg-terminal-yellow/5 shadow-[0_0_15px_rgba(247,201,72,0.15)]"
-                  : "border-white/5 hover:border-terminal-yellow/30"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-white/5 border border-white/10 text-terminal-yellow uppercase tracking-wider">
-                  {item.source}
-                </span>
-                <span className="text-[10px] text-white/36 font-mono">
-                  {formatTime(item.published_at)}
-                </span>
-              </div>
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-xs font-medium text-white/85 hover:text-terminal-yellow leading-relaxed group-hover:underline cursor-pointer"
+          [...news]
+            .sort((a, b) => {
+              const ta = new Date(a.published_at).getTime();
+              const tb = new Date(b.published_at).getTime();
+              return (isNaN(ta) ? 0 : ta) - (isNaN(tb) ? 0 : tb);
+            })
+            .map((item) => (
+              <div
+                key={item.id}
+                className={`p-2.5 border transition-all duration-500 bg-graphite-950/80 hover:bg-graphite-900 group ${
+                  item.isNew
+                    ? "border-terminal-yellow bg-terminal-yellow/5 shadow-[0_0_15px_rgba(247,201,72,0.15)]"
+                    : "border-white/5 hover:border-terminal-yellow/30"
+                }`}
               >
-                {item.title}
-                <ExternalLink size={10} className="inline ml-1 opacity-0 group-hover:opacity-60 transition-opacity" />
-              </a>
-              {item.description && (
-                <p className="mt-1.5 text-[10px] text-white/48 line-clamp-2 leading-relaxed">
-                  {item.description}
-                </p>
-              )}
-            </div>
-          ))
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-white/5 border border-white/10 text-terminal-yellow uppercase tracking-wider">
+                    {item.source}
+                  </span>
+                  <span className="text-[10px] text-white/36 font-mono">
+                    {formatTime(item.published_at)}
+                  </span>
+                </div>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-xs font-medium text-white/85 hover:text-terminal-yellow leading-relaxed group-hover:underline cursor-pointer"
+                >
+                  {item.title}
+                  <ExternalLink size={10} className="inline ml-1 opacity-0 group-hover:opacity-60 transition-opacity" />
+                </a>
+                {item.description && (
+                  <p className="mt-1.5 text-[10px] text-white/48 line-clamp-2 leading-relaxed">
+                    {item.description}
+                  </p>
+                )}
+              </div>
+            ))
         )}
       </div>
     </div>
