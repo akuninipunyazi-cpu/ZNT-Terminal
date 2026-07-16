@@ -43,7 +43,7 @@ export function ImageUploadZone({ value, onChange, token, apiBase }: Props) {
       }
 
       const data = await res.json() as { url: string };
-      onChange(`${base}${data.url}`);
+      onChange(data.url);
       setState("done");
     } catch (err) {
       setState("error");
@@ -71,6 +71,8 @@ export function ImageUploadZone({ value, onChange, token, apiBase }: Props) {
     if (inputRef.current) inputRef.current.value = "";
   }
 
+  const resolvedSrc = value ? (value.startsWith("http") ? value : `${base}${value}`) : "";
+
   return (
     <div className="w-full">
       {/* Hidden file input */}
@@ -83,11 +85,11 @@ export function ImageUploadZone({ value, onChange, token, apiBase }: Props) {
       />
 
       {/* Preview mode — show uploaded image */}
-      {value && state === "done" ? (
+      {value ? (
         <div className="relative group border border-terminal-yellow/30 bg-graphite-950 overflow-hidden rounded-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={value}
+            src={resolvedSrc}
             alt="Chart preview"
             className="w-full max-h-64 object-contain"
           />
@@ -162,7 +164,7 @@ export function ImageUploadZone({ value, onChange, token, apiBase }: Props) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={value}
+            src={resolvedSrc}
             alt="Chart full view"
             className="max-w-full max-h-full object-contain rounded shadow-2xl"
             onClick={(e) => e.stopPropagation()}

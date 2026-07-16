@@ -85,6 +85,14 @@ export default function ResearchPage() {
     }
   };
 
+  const resolveChartUrl = (url?: string) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+    return `${apiBase}${url}`;
+  };
+
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(247,201,72,0.06),transparent_40rem),linear-gradient(180deg,#050607,#090b0d_42%,#050607)] text-white">
       {/* Header */}
@@ -171,7 +179,7 @@ export default function ResearchPage() {
                         <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={idea.chart_url}
+                            src={resolveChartUrl(idea.chart_url)}
                             alt={`${idea.ticker} setup`}
                             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                             onError={(e) => {
@@ -180,7 +188,7 @@ export default function ResearchPage() {
                             }}
                           />
                           <a
-                            href={idea.chart_url}
+                            href={resolveChartUrl(idea.chart_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm"
@@ -273,10 +281,10 @@ export default function ResearchPage() {
                       {update.chart_url && (
                         <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={update.chart_url} alt={`${update.ticker} chart`}
+                          <img src={resolveChartUrl(update.chart_url)} alt={`${update.ticker} chart`}
                             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                             onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                          <a href={update.chart_url} target="_blank" rel="noopener noreferrer"
+                          <a href={resolveChartUrl(update.chart_url)} target="_blank" rel="noopener noreferrer"
                             className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm">
                             <ExternalLink size={14} />
                           </a>
@@ -314,10 +322,10 @@ export default function ResearchPage() {
                       {outlook.chart_url && (
                         <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={outlook.chart_url} alt={`${outlook.indicator} chart`}
+                          <img src={resolveChartUrl(outlook.chart_url)} alt={`${outlook.indicator} chart`}
                             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                             onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                          <a href={outlook.chart_url} target="_blank" rel="noopener noreferrer"
+                          <a href={resolveChartUrl(outlook.chart_url)} target="_blank" rel="noopener noreferrer"
                             className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm">
                             <ExternalLink size={14} />
                           </a>
