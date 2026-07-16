@@ -25,6 +25,7 @@ type MarketUpdate = {
   id: string;
   ticker: string;
   reason: string;
+  chart_url?: string;
   created_at: string;
 };
 
@@ -32,6 +33,7 @@ type EconomyOutlook = {
   id: string;
   indicator: string;
   explanation: string;
+  chart_url?: string;
   created_at: string;
 };
 
@@ -267,18 +269,32 @@ export default function ResearchPage() {
               ) : (
                 <div className="space-y-4">
                   {updates.map((update) => (
-                    <article key={update.id} className="border border-white/10 bg-black/60 p-4 rounded backdrop-blur">
-                      <div className="flex items-center justify-between gap-3 mb-3 border-b border-dashed border-white/10 pb-3 flex-wrap">
-                        <span className="px-3 py-1 text-xs font-black bg-terminal-yellow/10 border border-terminal-yellow/30 text-terminal-yellow uppercase tracking-wider rounded-sm">
-                          INDEX UPDATE: {update.ticker}
-                        </span>
-                        <time className="text-xs text-white/36 font-mono flex items-center gap-1">
-                          <Calendar size={13} /> {formatDate(update.created_at)}
-                        </time>
+                    <article key={update.id} className="border border-white/10 bg-black/60 rounded backdrop-blur overflow-hidden group">
+                      {update.chart_url && (
+                        <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={update.chart_url} alt={`${update.ticker} chart`}
+                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                          <a href={update.chart_url} target="_blank" rel="noopener noreferrer"
+                            className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm">
+                            <ExternalLink size={14} />
+                          </a>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <div className="flex items-center justify-between gap-3 mb-3 border-b border-dashed border-white/10 pb-3 flex-wrap">
+                          <span className="px-3 py-1 text-xs font-black bg-terminal-yellow/10 border border-terminal-yellow/30 text-terminal-yellow uppercase tracking-wider rounded-sm">
+                            INDEX UPDATE: {update.ticker}
+                          </span>
+                          <time className="text-xs text-white/36 font-mono flex items-center gap-1">
+                            <Calendar size={13} /> {formatDate(update.created_at)}
+                          </time>
+                        </div>
+                        <p className="text-sm text-white/88 leading-relaxed font-sans whitespace-pre-line">
+                          {update.reason}
+                        </p>
                       </div>
-                      <p className="text-sm text-white/88 leading-relaxed font-sans whitespace-pre-line">
-                        {update.reason}
-                      </p>
                     </article>
                   ))}
                 </div>
@@ -294,18 +310,32 @@ export default function ResearchPage() {
               ) : (
                 <div className="space-y-4">
                   {outlooks.map((outlook) => (
-                    <article key={outlook.id} className="border border-white/10 bg-black/60 p-4 rounded backdrop-blur">
-                      <div className="flex items-center justify-between gap-3 mb-3 border-b border-dashed border-white/10 pb-3 flex-wrap">
-                        <span className="px-3 py-1 text-xs font-black bg-terminal-cyan/10 border border-terminal-cyan/30 text-terminal-cyan uppercase tracking-wider rounded-sm">
-                          MACRO: {outlook.indicator}
-                        </span>
-                        <time className="text-xs text-white/36 font-mono flex items-center gap-1">
-                          <Calendar size={13} /> {formatDate(outlook.created_at)}
-                        </time>
+                    <article key={outlook.id} className="border border-white/10 bg-black/60 rounded backdrop-blur overflow-hidden group">
+                      {outlook.chart_url && (
+                        <div className="relative aspect-video w-full bg-graphite-950 border-b border-white/10 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={outlook.chart_url} alt={`${outlook.indicator} chart`}
+                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                          <a href={outlook.chart_url} target="_blank" rel="noopener noreferrer"
+                            className="absolute top-2 right-2 bg-black/80 hover:bg-black p-2 border border-white/10 text-white/80 hover:text-terminal-yellow transition-colors rounded-sm">
+                            <ExternalLink size={14} />
+                          </a>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <div className="flex items-center justify-between gap-3 mb-3 border-b border-dashed border-white/10 pb-3 flex-wrap">
+                          <span className="px-3 py-1 text-xs font-black bg-terminal-cyan/10 border border-terminal-cyan/30 text-terminal-cyan uppercase tracking-wider rounded-sm">
+                            MACRO: {outlook.indicator}
+                          </span>
+                          <time className="text-xs text-white/36 font-mono flex items-center gap-1">
+                            <Calendar size={13} /> {formatDate(outlook.created_at)}
+                          </time>
+                        </div>
+                        <p className="text-sm text-white/88 leading-relaxed font-sans whitespace-pre-line">
+                          {outlook.explanation}
+                        </p>
                       </div>
-                      <p className="text-sm text-white/88 leading-relaxed font-sans whitespace-pre-line">
-                        {outlook.explanation}
-                      </p>
                     </article>
                   ))}
                 </div>

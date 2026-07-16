@@ -13,7 +13,9 @@ class MarketUpdate(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     ticker: Mapped[str] = mapped_column(String(48), nullable=False)
     reason: Mapped[str] = mapped_column(String(4000), nullable=False)
+    chart_url: Mapped[str] = mapped_column(String(512), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
 
 
 class EconomyOutlook(Base):
@@ -22,7 +24,9 @@ class EconomyOutlook(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     indicator: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., CPI, PPI, FOMC
     explanation: Mapped[str] = mapped_column(String(4000), nullable=False)
+    chart_url: Mapped[str] = mapped_column(String(512), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
 
 
 class TradeIdea(Base):
