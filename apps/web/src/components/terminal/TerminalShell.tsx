@@ -114,11 +114,14 @@ export function TerminalShell() {
               <h1 className="text-base font-semibold">ZNT Terminal</h1>
               <p className="text-xs text-white/42">Z Nexus Trade screening desk</p>
             </div>
-            <div className="ml-6 hidden md:flex items-center gap-3 border-l border-white/10 pl-6 text-xs uppercase font-semibold tracking-wider">
+            <div className="ml-2 sm:ml-6 flex items-center gap-2.5 sm:gap-4 border-l border-white/10 pl-2.5 sm:pl-6 text-[11px] sm:text-xs uppercase font-semibold tracking-wider">
               <Link href="/terminal" className="text-terminal-yellow">Screening</Link>
               <Link href="/terminal/research" className="text-white/60 hover:text-terminal-yellow transition-colors">Research</Link>
               {isAdmin && (
-                <Link href="/admin" className="text-white/36 hover:text-terminal-yellow transition-colors">Admin Panel</Link>
+                <Link href="/admin" className="text-white/36 hover:text-terminal-yellow transition-colors">
+                  <span className="hidden sm:inline">Admin Panel</span>
+                  <span className="sm:hidden">Admin</span>
+                </Link>
               )}
             </div>
           </div>
