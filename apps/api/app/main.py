@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, payments, terminal, websocket
+from app.api.routes import auth, payments, terminal, websocket, insights
 from app.core.config import get_settings
 from app.core.database import engine
 from app.models import Base
@@ -39,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/auth", tags=["auth"])
     app.include_router(payments.router, prefix="/payments", tags=["payments"])
     app.include_router(terminal.router, prefix="/terminal", tags=["terminal"])
+    app.include_router(insights.router, prefix="/insights", tags=["insights"])
     app.include_router(websocket.router, tags=["websocket"])
 
     @app.get("/health")

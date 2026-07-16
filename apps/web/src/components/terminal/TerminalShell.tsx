@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Activity, Bell, Clock3, LogOut, Search, Zap } from "lucide-react";
+import Link from "next/link";
 import { MarketChart } from "@/components/terminal/MarketChart";
 import { SignalTable, type SignalRow } from "@/components/terminal/SignalTable";
 import { NewsPanel } from "@/components/terminal/NewsPanel";
 import { useTerminalSocket } from "@/lib/realtime";
+
 
 const timeframes = ["15m", "30m", "1h", "4h", "1d", "1w"];
 
@@ -77,6 +79,24 @@ export function TerminalShell() {
     ];
   }, [realtime.data]);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = window.localStorage.getItem("znt_token");
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          if (payload.username === "admin") {
+            setIsAdmin(true);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }, []);
+
   function logout() {
     window.localStorage.removeItem("znt_token");
     window.location.assign("/login");
@@ -94,7 +114,15 @@ export function TerminalShell() {
               <h1 className="text-base font-semibold">ZNT Terminal</h1>
               <p className="text-xs text-white/42">Z Nexus Trade screening desk</p>
             </div>
+            <div className="ml-6 hidden md:flex items-center gap-3 border-l border-white/10 pl-6 text-xs uppercase font-semibold tracking-wider">
+              <Link href="/terminal" className="text-terminal-yellow">Screening</Link>
+              <Link href="/terminal/research" className="text-white/60 hover:text-terminal-yellow transition-colors">Research</Link>
+              {isAdmin && (
+                <Link href="/admin" className="text-white/36 hover:text-terminal-yellow transition-colors">Admin Panel</Link>
+              )}
+            </div>
           </div>
+
 
           <div className="order-3 flex w-full items-center gap-2 overflow-x-auto sm:order-none sm:w-auto">
             {timeframes.map((item) => (
