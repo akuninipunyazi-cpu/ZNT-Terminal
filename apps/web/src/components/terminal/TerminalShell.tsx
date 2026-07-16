@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Activity, Bell, Clock3, LogOut, RadioTower, Search, Zap } from "lucide-react";
+import { Activity, Bell, Clock3, LogOut, Search, Zap } from "lucide-react";
 import { MarketChart } from "@/components/terminal/MarketChart";
 import { SignalTable, type SignalRow } from "@/components/terminal/SignalTable";
 import { NewsPanel } from "@/components/terminal/NewsPanel";
 import { useTerminalSocket } from "@/lib/realtime";
 
 const timeframes = ["15m", "30m", "1h", "4h", "1d", "1w"];
-const tapeSymbols = ["BTC", "ETH", "SOL", "WLD", "INJ", "MEME", "BNB", "SEI"];
+
 
 const flowRows = [
   ["Aggressive buy", "62%", "text-terminal-green"],
@@ -30,40 +30,7 @@ export function TerminalShell() {
   const realtime = useTerminalSocket(timeframe);
 
 
-  const tape = useMemo(() => {
-    const defaultTape = [
-      ["BTC", "+1.82%", "68,420.50", "up"],
-      ["ETH", "+0.74%", "3,812.20", "up"],
-      ["SOL", "+3.11%", "174.22", "up"],
-      ["WLD", "-2.46%", "4.18", "down"],
-      ["INJ", "+4.92%", "28.74", "up"],
-      ["MEME", "-5.18%", "0.0182", "down"],
-      ["BNB", "+0.38%", "612.10", "up"],
-      ["SEI", "+2.21%", "0.61", "up"]
-    ];
 
-    if (!realtime.tapeData) {
-      return defaultTape;
-    }
-
-    return tapeSymbols.map((sym) => {
-      const data = realtime.tapeData?.[sym];
-      if (!data) {
-        const fb = defaultTape.find((item) => item[0] === sym);
-        return fb || [sym, "0.00%", "0.00", "up"];
-      }
-
-      const formattedPrice = data.price.toLocaleString(undefined, {
-        minimumFractionDigits: sym === "MEME" ? 4 : 2,
-        maximumFractionDigits: sym === "MEME" ? 4 : 2
-      });
-      const changePrefix = data.change >= 0 ? "+" : "";
-      const formattedChange = `${changePrefix}${data.change.toFixed(2)}%`;
-      const direction = data.change >= 0 ? "up" : "down";
-
-      return [sym, formattedChange, formattedPrice, direction];
-    });
-  }, [realtime.tapeData]);
 
   const longRows: SignalRow[] = useMemo(() => {
     if (!realtime.data?.gainers) return [];
@@ -178,30 +145,6 @@ export function TerminalShell() {
             >
               <LogOut size={17} />
             </button>
-          </div>
-        </div>
-        <div className="flex h-9 items-center gap-2 overflow-hidden border-t border-white/10 bg-graphite-950/90 px-3 text-xs sm:px-4">
-          <div className="flex shrink-0 items-center gap-2 pr-2 text-terminal-yellow">
-            <RadioTower size={14} />
-            <span className="font-semibold uppercase">Live Tape</span>
-          </div>
-          <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
-            {tape.map(([symbol, change, price, direction]) => (
-              <div
-                key={symbol}
-                className="flex shrink-0 items-center gap-2 border-r border-white/10 pr-3"
-              >
-                <span className="font-semibold text-white">{symbol}</span>
-                <span className="text-white/48">{price}</span>
-                <span
-                  className={
-                    direction === "up" ? "text-terminal-green" : "text-terminal-red"
-                  }
-                >
-                  {change}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       </header>
