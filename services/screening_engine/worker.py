@@ -24,6 +24,7 @@ MAX_SYMBOLS_PER_CYCLE = 600
 # Closed-candle events arrive per symbol. Debounce them into one engine cycle
 # per timeframe boundary instead of running a full scan for every symbol.
 TRIGGER_BATCH_COUNT = 500
+TRIGGER_WAIT_BLOCK_MS = 3000
 TRIGGER_DEBOUNCE_SECONDS = 2.0
 TRIGGER_DRAIN_BLOCK_MS = 250
 
@@ -228,7 +229,7 @@ class ScreeningEngineWorker:
         events = await self.redis.xread(
             {stream_key: self._last_stream_id},
             count=TRIGGER_BATCH_COUNT,
-            block=0,
+            block=TRIGGER_WAIT_BLOCK_MS,
         )
         triggers = self._consume_trigger_events(events)
 
