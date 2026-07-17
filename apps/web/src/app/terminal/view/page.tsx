@@ -160,19 +160,27 @@ export default function TerminalViewPage() {
     chartRef.current  = chart;
     seriesRef.current = series;
 
+    const currentContainer = containerRef.current;
+
     // Resize observer
     const ro = new ResizeObserver(() => {
-      if (containerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({
-          width:  containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        });
+      if (currentContainer && chartRef.current) {
+        try {
+          chartRef.current.applyOptions({
+            width:  currentContainer.clientWidth,
+            height: currentContainer.clientHeight,
+          });
+        } catch (e) {
+          // Silently ignore if chart is disposed during resize callback
+        }
       }
     });
-    ro.observe(containerRef.current);
+    ro.observe(currentContainer);
 
     return () => {
       ro.disconnect();
+      chartRef.current = null;
+      seriesRef.current = null;
       chart.remove();
     };
   }, []);

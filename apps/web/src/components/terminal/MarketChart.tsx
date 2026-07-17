@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Maximize2 } from "lucide-react";
 
 const SYMBOLS = [
   { label: "BTC/USDT", value: "BINANCE:BTCUSDT" },
@@ -27,12 +28,12 @@ const CHART_TYPES = [
 ];
 
 export function MarketChart() {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
   const [symbol, setSymbol] = useState(SYMBOLS[0].value);
   const [interval, setInterval] = useState("60");
   const [chartType, setChartType] = useState("1");
-  const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
     // Remove any existing widget
@@ -73,6 +74,13 @@ export function MarketChart() {
       popup_width: "1000",
       popup_height: "650",
       container_id: "tv_chart_container",
+      // ZNT Custom color settings for yellow/white candles
+      upColor: "#F7C948",
+      downColor: "#FFFFFF",
+      wickUpColor: "#F7C948",
+      wickDownColor: "rgba(255,255,255,0.55)",
+      borderUpColor: "#F7C948",
+      borderDownColor: "#FFFFFF",
     });
 
     const container = document.createElement("div");
@@ -99,13 +107,7 @@ export function MarketChart() {
     SYMBOLS.find((s) => s.value === symbol)?.label ?? "BTC/USDT";
 
   return (
-    <section
-      className={`border border-white/10 bg-black/70 shadow-[inset_0_1px_0_rgba(247,201,72,0.08)] flex flex-col transition-all duration-300 ${
-        fullscreen
-          ? "fixed inset-0 z-50 border-none"
-          : ""
-      }`}
-    >
+    <section className="border border-white/10 bg-black/70 shadow-[inset_0_1px_0_rgba(247,201,72,0.08)] flex flex-col transition-all duration-300">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
         <div className="flex items-center gap-3">
@@ -165,13 +167,13 @@ export function MarketChart() {
             ))}
           </div>
 
-          {/* Fullscreen toggle */}
+          {/* Interactive view toggle */}
           <button
-            onClick={() => setFullscreen((f) => !f)}
-            title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+            onClick={() => router.push("/terminal/view")}
+            title="Open Interactive Fullscreen Chart"
             className="flex h-7 w-7 items-center justify-center border border-white/10 text-white/50 hover:border-terminal-yellow/50 hover:text-white/80 transition-colors text-sm"
           >
-            {fullscreen ? "⊠" : "⊡"}
+            <Maximize2 size={13} />
           </button>
         </div>
       </div>
@@ -181,7 +183,7 @@ export function MarketChart() {
         id="tv_chart_container"
         ref={containerRef}
         className="tradingview-widget-container flex-1"
-        style={{ height: fullscreen ? "calc(100vh - 50px)" : "460px" }}
+        style={{ height: "460px" }}
       />
 
       {/* Branding strip */}
@@ -196,3 +198,4 @@ export function MarketChart() {
     </section>
   );
 }
+
