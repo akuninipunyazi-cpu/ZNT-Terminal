@@ -80,16 +80,17 @@ export function MarketChart() {
     container.style.height = "100%";
     container.style.width = "100%";
 
-    if (containerRef.current) {
-      containerRef.current.appendChild(container);
-      containerRef.current.appendChild(script);
+    const currentContainer = containerRef.current;
+    if (currentContainer) {
+      currentContainer.appendChild(container);
+      currentContainer.appendChild(script);
     }
 
     widgetRef.current = script;
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
+      if (currentContainer) {
+        currentContainer.innerHTML = "";
       }
     };
   }, [symbol, interval, chartType]);

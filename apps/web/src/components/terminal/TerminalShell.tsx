@@ -110,6 +110,10 @@ export function TerminalShell() {
             </div>
             <div className="ml-2 sm:ml-6 flex items-center gap-2.5 sm:gap-4 border-l border-white/10 pl-2.5 sm:pl-6 text-[11px] sm:text-xs uppercase font-semibold tracking-wider">
               <Link href="/terminal" className="text-terminal-yellow">Screening</Link>
+              <Link href="/terminal/view" className="text-white/60 hover:text-terminal-yellow transition-colors">
+                <span className="hidden sm:inline">Chart View</span>
+                <span className="sm:hidden">Chart</span>
+              </Link>
               <Link href="/terminal/research" className="text-white/60 hover:text-terminal-yellow transition-colors">Research</Link>
               {isAdmin && (
                 <Link href="/admin" className="text-white/36 hover:text-terminal-yellow transition-colors">
