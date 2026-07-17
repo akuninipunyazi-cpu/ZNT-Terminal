@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Bell, Clock3, LogOut, Search, Zap } from "lucide-react";
+import { Activity, Bell, Clock3, LogOut, Search, Zap } from "lucide-react";
 import Link from "next/link";
-import { MarketChart } from "@/components/terminal/MarketChart";
 import { SignalTable, type SignalRow } from "@/components/terminal/SignalTable";
 import { NewsPanel } from "@/components/terminal/NewsPanel";
 import { useTerminalSocket } from "@/lib/realtime";
@@ -19,6 +18,13 @@ const flowRows = [
   ["Liquidity pull", "low", "text-terminal-cyan"]
 ];
 
+const levelRows = [
+  ["L0", "Universe", 1000, "bg-white/20"],
+  ["L1", "Liquidity", 284, "bg-terminal-cyan"],
+  ["L2", "Volume anomaly", 42, "bg-terminal-yellow"],
+  ["L3", "Breakout + entropy", 18, "bg-terminal-amber"],
+  ["L4", "Momentum verified", 12, "bg-terminal-green"]
+];
 
 
 export function TerminalShell() {
@@ -181,10 +187,8 @@ export function TerminalShell() {
       <div className="grid gap-3 p-3 lg:grid-cols-[1fr_16rem] lg:p-4">
         <section className="grid min-w-0 gap-3">
 
-
-          <div className="grid gap-3 xl:grid-cols-[1fr_0.82fr]">
-            <MarketChart />
-
+          {/* Row 1: Momentum Verification & Engine Ladder */}
+          <div className="grid gap-3 xl:grid-cols-2">
             <section className="border border-white/10 bg-black/70">
               <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
                 <h2 className="flex items-center gap-2 text-sm font-semibold uppercase text-white/80">
@@ -213,16 +217,50 @@ export function TerminalShell() {
                 ))}
               </div>
             </section>
+
+            <section className="border border-white/10 bg-black/70">
+              <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
+                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase text-white/80">
+                  <Activity size={15} className="text-terminal-yellow" />
+                  Engine Ladder
+                </h2>
+                <span className="text-xs text-white/42">single engine / config driven</span>
+              </div>
+              <div className="grid gap-2 p-3">
+                {levelRows.map(([level, label, value, color], index) => (
+                  <div
+                    key={String(level)}
+                    className="grid grid-cols-[3rem_1fr_4rem] items-center gap-3 border border-white/10 bg-graphite-950 px-3 py-2"
+                  >
+                    <span className="font-semibold text-terminal-yellow">{level}</span>
+                    <div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-white/72">{label}</span>
+                        <span className="text-white">{String(value)}</span>
+                      </div>
+                      <div className="mt-2 h-1.5 bg-white/[0.07]">
+                        <div
+                          className={`h-1.5 ${String(color)}`}
+                          style={{ width: `${Math.max(8, 100 - index * 20)}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-right text-xs text-white/36">pass</span>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
 
+          {/* Row 2: Flow Monitor */}
           <section className="border border-white/10 bg-black/70">
             <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
               <h2 className="text-sm font-semibold uppercase text-white/80">
                 Flow Monitor
               </h2>
-              <span className="text-xs text-terminal-cyan">BTCUSDT · Live</span>
+              <span className="text-xs text-terminal-cyan">BTCUSDT sample</span>
             </div>
-            <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-2 p-3 sm:grid-cols-2">
               {flowRows.map(([label, value, color]) => (
                 <div key={label} className="border border-white/10 bg-graphite-950 p-3">
                   <p className="text-xs uppercase text-white/42">{label}</p>
@@ -234,6 +272,7 @@ export function TerminalShell() {
             </div>
           </section>
 
+          {/* Row 3: Long & Short Watchlists */}
           <div className="grid gap-3 xl:grid-cols-2">
             <SignalTable title="Long Watchlist" rows={longRows} />
             <SignalTable title="Short Watchlist" rows={shortRows} />
