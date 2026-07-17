@@ -1,80 +1,197 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { createChart, ColorType } from "lightweight-charts";
+import { useEffect, useRef, useState } from "react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
-const candles = [
-  { time: "2026-05-18", open: 101, high: 108, low: 96, close: 105 },
-  { time: "2026-05-19", open: 105, high: 112, low: 103, close: 110 },
-  { time: "2026-05-20", open: 110, high: 114, low: 106, close: 108 },
-  { time: "2026-05-21", open: 108, high: 121, low: 107, close: 119 },
-  { time: "2026-05-22", open: 119, high: 127, low: 115, close: 124 },
-  { time: "2026-05-23", open: 124, high: 129, low: 120, close: 126 }
+const SYMBOLS = [
+  { label: "BTC/USDT", value: "BINANCE:BTCUSDT" },
+  { label: "ETH/USDT", value: "BINANCE:ETHUSDT" },
+  { label: "SOL/USDT", value: "BINANCE:SOLUSDT" },
+  { label: "BNB/USDT", value: "BINANCE:BNBUSDT" },
+];
+
+const INTERVALS = [
+  { label: "15m", value: "15" },
+  { label: "30m", value: "30" },
+  { label: "1h", value: "60" },
+  { label: "4h", value: "240" },
+  { label: "1D", value: "D" },
+  { label: "1W", value: "W" },
+];
+
+const CHART_TYPES = [
+  { label: "Candles", value: "1" },
+  { label: "Bars", value: "0" },
+  { label: "Line", value: "2" },
+  { label: "Area", value: "3" },
 ];
 
 export function MarketChart() {
-  const chartRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<any>(null);
+  const [symbol, setSymbol] = useState(SYMBOLS[0].value);
+  const [interval, setInterval] = useState("60");
+  const [chartType, setChartType] = useState("1");
+  const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
-    if (!chartRef.current) {
-      return;
+    // Remove any existing widget
+    if (containerRef.current) {
+      containerRef.current.innerHTML = "";
     }
 
-    const chart = createChart(chartRef.current, {
-      width: chartRef.current.clientWidth,
-      height: 310,
-      layout: {
-        background: { type: ColorType.Solid, color: "#050607" },
-        textColor: "rgba(255,255,255,0.64)"
-      },
-      grid: {
-        vertLines: { color: "rgba(255,255,255,0.05)" },
-        horzLines: { color: "rgba(255,255,255,0.05)" }
-      },
-      rightPriceScale: {
-        borderColor: "rgba(255,255,255,0.12)"
-      },
-      timeScale: {
-        borderColor: "rgba(255,255,255,0.12)"
-      }
+    const script = document.createElement("script");
+    script.src =
+      "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.type = "text/javascript";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      autosize: true,
+      symbol: symbol,
+      interval: interval,
+      timezone: "Asia/Jakarta",
+      theme: "dark",
+      style: chartType,
+      locale: "en",
+      backgroundColor: "rgba(5, 6, 7, 1)",
+      gridColor: "rgba(255, 255, 255, 0.04)",
+      hide_top_toolbar: false,
+      hide_legend: false,
+      allow_symbol_change: true,
+      save_image: true,
+      calendar: false,
+      support_host: "https://www.tradingview.com",
+      withdateranges: true,
+      hide_side_toolbar: false,
+      details: false,
+      hotlist: false,
+      studies: [
+        "Volume@tv-basicstudies",
+        "MACD@tv-basicstudies",
+      ],
+      show_popup_button: true,
+      popup_width: "1000",
+      popup_height: "650",
+      container_id: "tv_chart_container",
     });
 
-    const series = chart.addCandlestickSeries({
-      upColor: "#30d158",
-      downColor: "#ff453a",
-      borderVisible: false,
-      wickUpColor: "#30d158",
-      wickDownColor: "#ff453a"
-    });
+    const container = document.createElement("div");
+    container.className = "tradingview-widget-container__widget";
+    container.style.height = "100%";
+    container.style.width = "100%";
 
-    series.setData(candles);
-    chart.timeScale().fitContent();
+    if (containerRef.current) {
+      containerRef.current.appendChild(container);
+      containerRef.current.appendChild(script);
+    }
 
-    const resizeObserver = new ResizeObserver(() => {
-      if (chartRef.current) {
-        chart.applyOptions({ width: chartRef.current.clientWidth });
-      }
-    });
-    resizeObserver.observe(chartRef.current);
+    widgetRef.current = script;
 
     return () => {
-      resizeObserver.disconnect();
-      chart.remove();
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
     };
-  }, []);
+  }, [symbol, interval, chartType]);
+
+  const selectedSymbolLabel =
+    SYMBOLS.find((s) => s.value === symbol)?.label ?? "BTC/USDT";
 
   return (
-    <section className="border border-white/10 bg-black/70 shadow-[inset_0_1px_0_rgba(247,201,72,0.08)]">
-      <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
-        <h2 className="text-sm font-semibold uppercase text-white/80">
-          Focus Chart / Volatility Break
-        </h2>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-terminal-green">Vol +42%</span>
-          <span className="text-terminal-yellow">BTCUSDT sample</span>
+    <section
+      className={`border border-white/10 bg-black/70 shadow-[inset_0_1px_0_rgba(247,201,72,0.08)] flex flex-col transition-all duration-300 ${
+        fullscreen
+          ? "fixed inset-0 z-50 border-none"
+          : ""
+      }`}
+    >
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-white/80">
+            📈 Market Chart
+          </h2>
+          {/* Symbol selector */}
+          <div className="flex items-center gap-1">
+            {SYMBOLS.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setSymbol(s.value)}
+                className={`h-7 px-2.5 text-xs font-semibold transition-colors ${
+                  symbol === s.value
+                    ? "bg-terminal-yellow text-black"
+                    : "border border-white/10 text-white/50 hover:border-terminal-yellow/50 hover:text-white/80"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Chart type */}
+          <div className="hidden sm:flex items-center gap-1">
+            {CHART_TYPES.map((c) => (
+              <button
+                key={c.value}
+                onClick={() => setChartType(c.value)}
+                className={`h-7 px-2 text-[11px] transition-colors ${
+                  chartType === c.value
+                    ? "bg-white/10 text-white"
+                    : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Interval */}
+          <div className="flex items-center gap-1">
+            {INTERVALS.map((tf) => (
+              <button
+                key={tf.value}
+                onClick={() => setInterval(tf.value)}
+                className={`h-7 min-w-[2rem] px-2 text-xs font-semibold transition-colors ${
+                  interval === tf.value
+                    ? "bg-terminal-yellow text-black"
+                    : "border border-white/10 text-white/50 hover:border-terminal-yellow/50 hover:text-white/80"
+                }`}
+              >
+                {tf.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Fullscreen toggle */}
+          <button
+            onClick={() => setFullscreen((f) => !f)}
+            title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+            className="flex h-7 w-7 items-center justify-center border border-white/10 text-white/50 hover:border-terminal-yellow/50 hover:text-white/80 transition-colors text-sm"
+          >
+            {fullscreen ? "⊠" : "⊡"}
+          </button>
         </div>
       </div>
-      <div ref={chartRef} className="h-[310px] w-full" />
+
+      {/* TradingView Widget */}
+      <div
+        id="tv_chart_container"
+        ref={containerRef}
+        className="tradingview-widget-container flex-1"
+        style={{ height: fullscreen ? "calc(100vh - 50px)" : "460px" }}
+      />
+
+      {/* Branding strip */}
+      <div className="flex items-center justify-between border-t border-white/[0.06] px-3 py-1.5">
+        <span className="text-[10px] text-white/20 font-mono">
+          Powered by TradingView
+        </span>
+        <span className="text-[10px] text-white/20 font-mono uppercase">
+          {selectedSymbolLabel} · WS Live
+        </span>
+      </div>
     </section>
   );
 }
